@@ -1,0 +1,147 @@
+{
+  "testPaths": {
+    "happy": {
+      "description": "Normal, expected user flows",
+      "directory": "cypress/e2e/happy-path",
+      "focus": "Successful operations, typical user journeys",
+      "examples": [
+        "User successfully navigates to task generator",
+        "User successfully generates tasks",
+        "User successfully connects to GitHub"
+      ]
+    },
+    "sad": {
+      "description": "Error scenarios that are expected and handled gracefully",
+      "directory": "cypress/e2e/sad-path",
+      "focus": "Network issues, slow connections, partial failures",
+      "examples": [
+        "Slow network connections",
+        "Partial page loads",
+        "Browser back/forward navigation",
+        "Authentication token expiration"
+      ]
+    },
+    "edge": {
+      "description": "Boundary conditions and edge cases",
+      "directory": "cypress/e2e/edge-path",
+      "focus": "Extreme inputs, boundary values, unusual conditions",
+      "examples": [
+        "Very long project descriptions",
+        "Maximum file size uploads",
+        "Special characters and Unicode",
+        "Rapid user interactions"
+      ]
+    },
+    "alternative": {
+      "description": "Different ways to accomplish the same goal",
+      "directory": "cypress/e2e/alternative-path",
+      "focus": "Multiple approaches, user preferences, different workflows",
+      "examples": [
+        "Different authentication methods",
+        "Alternative file upload methods",
+        "Different platform selections",
+        "Various integration approaches"
+      ]
+    },
+    "exception": {
+      "description": "Unexpected errors and system failures",
+      "directory": "cypress/e2e/exception-path",
+      "focus": "Server errors, system failures, unexpected conditions",
+      "examples": [
+        "Server 500 errors",
+        "Network timeouts",
+        "Database connection failures",
+        "Memory allocation errors"
+      ]
+    },
+    "negative": {
+      "description": "Invalid inputs and malicious scenarios",
+      "directory": "cypress/e2e/negative-path",
+      "focus": "Security, input validation, attack prevention",
+      "examples": [
+        "XSS attacks",
+        "SQL injection",
+        "CSRF attacks",
+        "Malicious file uploads"
+      ]
+    }
+  },
+  "features": {
+    "landing-page": {
+      "description": "Landing page functionality",
+      "testFiles": [
+        "cypress/e2e/happy-path/landing-page.cy.ts",
+        "cypress/e2e/sad-path/landing-page.cy.ts",
+        "cypress/e2e/negative-path/landing-page.cy.ts"
+      ]
+    },
+    "task-generator": {
+      "description": "Task generation functionality",
+      "testFiles": [
+        "cypress/e2e/happy-path/task-generator.cy.ts",
+        "cypress/e2e/edge-path/task-generator.cy.ts",
+        "cypress/e2e/exception-path/task-generator.cy.ts"
+      ]
+    },
+    "integrations": {
+      "description": "Integration management functionality",
+      "testFiles": [
+        "cypress/e2e/happy-path/integrations.cy.ts",
+        "cypress/e2e/alternative-path/integrations.cy.ts",
+        "cypress/e2e/exception-path/integrations.cy.ts"
+      ]
+    },
+    "document-generator": {
+      "description": "Document generation functionality",
+      "testFiles": [
+        "cypress/e2e/happy-path/document-generator.cy.ts",
+        "cypress/e2e/edge-path/document-generator.cy.ts",
+        "cypress/e2e/exception-path/document-generator.cy.ts"
+      ]
+    },
+    "direct-create-tasks": {
+      "description": "Direct task creation functionality",
+      "testFiles": [
+        "cypress/e2e/happy-path/direct-create-tasks.cy.ts",
+        "cypress/e2e/edge-path/direct-create-tasks.cy.ts",
+        "cypress/e2e/exception-path/direct-create-tasks.cy.ts"
+      ]
+    },
+    "oauth-result": {
+      "description": "OAuth result handling functionality",
+      "testFiles": [
+        "cypress/e2e/happy-path/oauth-result.cy.ts",
+        "cypress/e2e/sad-path/oauth-result.cy.ts",
+        "cypress/e2e/exception-path/oauth-result.cy.ts"
+      ]
+    }
+  },
+  "scripts": {
+    "runAll": "cypress run --e2e",
+    "runHappy": "cypress run --spec \"cypress/e2e/happy-path/**/*.cy.ts\"",
+    "runSad": "cypress run --spec \"cypress/e2e/sad-path/**/*.cy.ts\"",
+    "runEdge": "cypress run --spec \"cypress/e2e/edge-path/**/*.cy.ts\"",
+    "runAlternative": "cypress run --spec \"cypress/e2e/alternative-path/**/*.cy.ts\"",
+    "runException": "cypress run --spec \"cypress/e2e/exception-path/**/*.cy.ts\"",
+    "runNegative": "cypress run --spec \"cypress/e2e/negative-path/**/*.cy.ts\"",
+    "runLanding": "cypress run --spec \"cypress/e2e/**/landing-page.cy.ts\"",
+    "runTaskGenerator": "cypress run --spec \"cypress/e2e/**/task-generator.cy.ts\"",
+    "runIntegrations": "cypress run --spec \"cypress/e2e/**/integrations.cy.ts\"",
+    "runDocumentGenerator": "cypress run --spec \"cypress/e2e/**/document-generator.cy.ts\"",
+    "runDirectCreateTasks": "cypress run --spec \"cypress/e2e/**/direct-create-tasks.cy.ts\"",
+    "runOAuthResult": "cypress run --spec \"cypress/e2e/**/oauth-result.cy.ts\""
+  },
+  "coverage": {
+    "happy": "80%",
+    "sad": "70%",
+    "edge": "60%",
+    "alternative": "50%",
+    "exception": "90%",
+    "negative": "95%"
+  },
+  "priorities": {
+    "high": ["happy", "exception", "negative"],
+    "medium": ["sad", "edge"],
+    "low": ["alternative"]
+  }
+}

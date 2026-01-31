@@ -1,0 +1,124 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - name: Checkout frontend code
+      uses: actions/checkout@v4
+      
+    - name: Get current branch name
+      id: branch
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          echo "branch_name=${{ github.head_ref }}" >> $GITHUB_OUTPUT
+        else
+          echo "branch_name=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Clone backend repository
+      run: |
+        git clone https://${{ secrets.BE_REPO_ACCESS_PAT }}@github.com/hiruthicShaSS/bassist.git backend
+        cd backend
+        
+        # Check if the current branch exists in backend
+        if git show-ref --verify --quiet refs/remotes/origin/${{ steps.branch.outputs.branch_name }}; then
+          echo "Switching to branch: ${{ steps.branch.outputs.branch_name }}"
+          git checkout ${{ steps.branch.outputs.branch_name }}
+        else
+          echo "Branch ${{ steps.branch.outputs.branch_name }} not found in backend, using main branch"
+          git checkout main
+        fi
+        
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        
+    - name: Install frontend dependencies
+      run: npm ci
+      
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        npm ci
+        
+    - name: Type check frontend
+      run: npm run typecheck
+      
+    - name: Lint frontend
+      run: npm run lint
+      
+    - name: Build frontend application
+      run: npm run build
+      
+    - name: Build backend application
+      run: |
+        cd backend
+        npm run build
+        
+    - name: Start backend server
+      run: |
+        cd backend
+        npm start &
+        sleep 15
+      env:
+        NODE_ENV: production
+        
+    - name: Start frontend production server
+      run: |
+        npm run preview &
+        sleep 10
+      env:
+        NODE_ENV: production
+        
+    - name: Wait for servers to be ready
+      run: |
+        timeout 30 bash -c 'until curl -f http://localhost:5090; do sleep 1; done'
+        timeout 30 bash -c 'until curl -f http://localhost:4173; do sleep 1; done'
+        
+    - name: Run Cypress E2E tests
+      run: npm run cypress:run:e2e
+      env:
+        DISABLE_POSTHOG: 'true'
+        TEST_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+        TEST_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
+        API_BASE_URL: 'http://localhost:5090'
+        TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+        TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+        
+    - name: Run Cypress Component tests
+      run: npm run cypress:run:component
+      
+    - name: Upload Cypress screenshots on failure
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: cypress-screenshots
+        path: cypress/results/screenshots/
+        
+    - name: Upload Cypress videos on failure
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: cypress-videos
+        path: cypress/results/videos/
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: cypress/results/junit/

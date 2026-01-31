@@ -1,0 +1,174 @@
+{
+  "user": {
+    "id": "mock-user-id",
+    "email": "test@example.com",
+    "full_name": "Test User",
+    "avatar_url": "https://via.placeholder.com/40"
+  },
+  "taskBreakdown": {
+    "summary": {
+      "number_of_epics": 3,
+      "number_of_tasks": 8,
+      "total_estimated_hours": 24,
+      "assumptions": [
+        "User has basic knowledge of React",
+        "Project uses TypeScript",
+        "Tailwind CSS is available"
+      ]
+    },
+    "epics": [
+      {
+        "name": "Authentication Setup",
+        "tasks": [
+          {
+            "title": "Set up Supabase authentication",
+            "description": "Configure Supabase client and authentication flow",
+            "estimate": "4h"
+          },
+          {
+            "title": "Create login component",
+            "description": "Build login form with email/password and Google OAuth",
+            "estimate": "3h"
+          }
+        ]
+      },
+      {
+        "name": "Task Management",
+        "tasks": [
+          {
+            "title": "Create task model",
+            "description": "Define task schema and database structure",
+            "estimate": "2h"
+          },
+          {
+            "title": "Build task list component",
+            "description": "Display tasks in a list with filtering and sorting",
+            "estimate": "4h"
+          },
+          {
+            "title": "Add task creation form",
+            "description": "Form to create new tasks with validation",
+            "estimate": "3h"
+          }
+        ]
+      },
+      {
+        "name": "Integration Features",
+        "tasks": [
+          {
+            "title": "GitHub integration",
+            "description": "Connect to GitHub API for repository management",
+            "estimate": "5h"
+          },
+          {
+            "title": "Task synchronization",
+            "description": "Sync tasks with external project management tools",
+            "estimate": "3h"
+          }
+        ]
+      }
+    ]
+  },
+  "platforms": [
+    {
+      "id": "jira",
+      "name": "Jira",
+      "description": "Atlassian Jira"
+    },
+    {
+      "id": "asana",
+      "name": "Asana",
+      "description": "Asana project management"
+    },
+    {
+      "id": "trello",
+      "name": "Trello",
+      "description": "Trello boards"
+    },
+    {
+      "id": "linear",
+      "name": "Linear",
+      "description": "Linear issue tracking"
+    },
+    {
+      "id": "github",
+      "name": "GitHub Issues",
+      "description": "GitHub Issues and Projects"
+    }
+  ],
+  "repositories": [
+    {
+      "id": 1,
+      "name": "test-repo",
+      "full_name": "testuser/test-repo",
+      "description": "A test repository for development",
+      "private": false,
+      "owner": {
+        "login": "testuser",
+        "avatar_url": "https://via.placeholder.com/40"
+      }
+    },
+    {
+      "id": 2,
+      "name": "another-repo",
+      "full_name": "testuser/another-repo",
+      "description": "Another test repository",
+      "private": true,
+      "owner": {
+        "login": "testuser",
+        "avatar_url": "https://via.placeholder.com/40"
+      }
+    }
+  ],
+  "organizations": [
+    {
+      "id": 1,
+      "login": "testuser",
+      "type": "User",
+      "avatar_url": "https://via.placeholder.com/40"
+    },
+    {
+      "id": 2,
+      "login": "testorg",
+      "type": "Organization",
+      "avatar_url": "https://via.placeholder.com/40"
+    }
+  ],
+  "integrations": [
+    {
+      "id": "github",
+      "name": "GitHub",
+      "connected": true,
+      "description": "Connect to GitHub repositories"
+    },
+    {
+      "id": "gitlab",
+      "name": "GitLab",
+      "connected": false,
+      "description": "Connect to GitLab repositories"
+    },
+    {
+      "id": "bitbucket",
+      "name": "Bitbucket",
+      "connected": false,
+      "description": "Connect to Bitbucket repositories"
+    }
+  ],
+  "oauthResults": {
+    "success": {
+      "status": "success",
+      "provider": "github",
+      "message": "Successfully connected to GitHub"
+    },
+    "error": {
+      "status": "error",
+      "provider": "github",
+      "message": "Failed to connect to GitHub"
+    },
+    "expired": {
+      "status": "expired",
+      "provider": "github",
+      "message": "OAuth session expired"
+    }
+  }
+}
