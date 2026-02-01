@@ -474,6 +474,7 @@ export function useExecuteMCPQuery() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progressMessage, setProgressMessage] = useState<string | null>(null);
+  const [orchestrationLogs, setOrchestrationLogs] = useState<string[]>([]);
 
   const executeMCPQuery = useCallback(async (request: {
     query: string;
@@ -487,9 +488,13 @@ export function useExecuteMCPQuery() {
     setLoading(true);
     setError(null);
     setProgressMessage(null);
+    setOrchestrationLogs([]);
 
     try {
       const response = await apiClient.executeMCPQuery(request);
+      if (response._orchestration?.progressMessages) {
+        setOrchestrationLogs(response._orchestration.progressMessages);
+      }
       return response;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
@@ -516,6 +521,7 @@ export function useExecuteMCPQuery() {
     setLoading(true);
     setError(null);
     setProgressMessage(null);
+    setOrchestrationLogs([]);
 
     try {
       const response = await apiClient.executeMCPQueryStream(
@@ -526,6 +532,7 @@ export function useExecuteMCPQuery() {
               ? `Iteration ${event.iteration} of ${event.totalIterations}: ${event.message}`
               : event.message;
             setProgressMessage(message);
+            setOrchestrationLogs(prev => [...prev, message]);
             if (onProgress) {
               onProgress(message);
             }
@@ -550,6 +557,7 @@ export function useExecuteMCPQuery() {
     loading,
     error,
     progressMessage,
+    orchestrationLogs,
     executeMCPQuery,
     executeMCPQueryStream,
   };

@@ -76,6 +76,17 @@ export interface CreateTasksResponse {
   result?: string;
 }
 
+export interface ExecuteMCPQueryResponse {
+  result: string;
+  summary?: string;
+  _orchestration?: {
+    iterations: number;
+    completed: boolean;
+    reason?: string;
+    progressMessages?: string[];
+  };
+}
+
 // Progress Event Types for SSE
 export interface ProgressEvent {
   type: 'progress' | 'task_created' | 'epic_generated' | 'epic_count' | 'error' | 'complete' | 'chunk';

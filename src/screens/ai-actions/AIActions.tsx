@@ -13,6 +13,7 @@ export default function AIActions() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<string | null>(null);
+  const [summary, setSummary] = useState<string | null>(null);
   const [selectedPlatform, setSelectedPlatform] = useState<PlanningPlatform | ''>('');
   const { repositoryOwner, setRepositoryOwner, repositoryName, setRepositoryName } = useRepository();
   const [gitlabProjectId, setGitlabProjectId] = useState('');
@@ -26,6 +27,7 @@ export default function AIActions() {
     loading,
     error,
     progressMessage,
+    orchestrationLogs,
   } = useExecuteMCPQuery();
 
   const [isLoadingBranches, setIsLoadingBranches] = useState(false);
@@ -72,6 +74,7 @@ export default function AIActions() {
 
     try {
       setResult(null);
+      setSummary(null);
       const response = await executeMCPQueryStream({
         query: query.trim(),
         platform: selectedPlatform || undefined,
@@ -82,6 +85,7 @@ export default function AIActions() {
         branch: branch || undefined,
       });
       setResult(response.result || 'Query executed successfully');
+      setSummary(response.summary || null);
     } catch {
       logger.error('Error executing MCP query');
     }
@@ -194,6 +198,18 @@ export default function AIActions() {
                   )}
                 </div>
               </div>
+              {orchestrationLogs.length > 0 && (
+                <div className="mt-4 p-3 bg-blue-900/10 dark:bg-blue-900/40 rounded border border-blue-200/50 dark:border-blue-800/50">
+                  <p className="text-[10px] uppercase tracking-wider font-bold text-blue-600 dark:text-blue-400 mb-2">Live Orchestration Logs</p>
+                  <div className="space-y-1 max-h-40 overflow-y-auto">
+                    {orchestrationLogs.slice(-3).map((log, i) => (
+                      <p key={i} className="text-xs text-blue-800 dark:text-blue-200 animate-pulse">
+                        {log}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -201,10 +217,44 @@ export default function AIActions() {
             <div className={styles.result.container}>
               <div className={styles.result.header}>
                 <CheckCircle2 className={styles.result.icon} />
-                <span className={styles.result.title}>Result</span>
+                <span className={styles.result.title}>Execution Result</span>
               </div>
-              <div className={styles.result.content}>
-                <ReactMarkdown>{result}</ReactMarkdown>
+              <div className="px-1">
+                <p className="text-gray-900 dark:text-gray-100 font-medium mb-4">
+                  {summary || (result.length > 200 ? result.substring(0, 197) + "..." : result)}
+                </p>
+
+                <div className="space-y-4">
+                  <div className="border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden">
+                    <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+                      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Full AI Output</span>
+                    </div>
+                    <div className="p-4 bg-white dark:bg-gray-900">
+                      <div className="prose dark:prose-invert max-w-none text-sm">
+                        <ReactMarkdown>{result}</ReactMarkdown>
+                      </div>
+                    </div>
+                  </div>
+
+                  {orchestrationLogs.length > 0 && (
+                    <details className="group border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 open:shadow-md">
+                      <summary className="list-none flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-800/50 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors rounded-lg">
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Orchestration Logs ({orchestrationLogs.length} steps)</span>
+                        <svg className="w-5 h-5 text-gray-500 transition-transform duration-200 group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="19 9l-7 7-7-7" />
+                        </svg>
+                      </summary>
+                      <div className="p-4 bg-gray-900 text-gray-300 text-[10px] font-mono border-t border-gray-700 rounded-b-lg max-h-60 overflow-y-auto">
+                        {orchestrationLogs.map((log, i) => (
+                          <div key={i} className="mb-1 py-1 border-b border-gray-800 last:border-0">
+                            <span className="text-blue-500 font-bold mr-2">Step {i + 1}:</span>
+                            {log}
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
+                </div>
               </div>
             </div>
           )}

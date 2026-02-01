@@ -8,6 +8,7 @@ import {
   DocumentGenerationRequest,
   DocumentGenerationResponse,
   ProgressEvent,
+  ExecuteMCPQueryResponse
 } from '../interfaces';
 import { ErrorHandler } from '../utils/error-handler';
 import { ValidationUtils } from '../utils/validation';
@@ -520,10 +521,8 @@ class ApiClient {
     repositoryName?: string;
     gitlabProjectId?: string;
     jiraProjectKey?: string;
-  }): Promise<{
-    result: string;
-  }> {
-    return this.post('ai-actions/execute', request);
+  }): Promise<ExecuteMCPQueryResponse> {
+    return this.post<ExecuteMCPQueryResponse>('ai-actions/execute', request);
   }
 
   async executeMCPQueryStream(
@@ -536,14 +535,7 @@ class ApiClient {
       jiraProjectKey?: string;
     },
     onProgress: (event: ProgressEvent) => void
-  ): Promise<{
-    result: string;
-    _orchestration?: {
-      iterations: number;
-      completed: boolean;
-      reason?: string;
-    };
-  }> {
+  ): Promise<ExecuteMCPQueryResponse> {
     const headers = await this.getAuthHeaders();
     const response = await fetch(`${this.baseUrl}/ai-actions/execute-stream`, {
       method: 'POST',

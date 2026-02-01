@@ -24,7 +24,7 @@ interface Issue {
 
 export default function BugFix() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  useAuth();
   const { repositoryOwner, setRepositoryOwner, repositoryName, setRepositoryName } = useRepository();
   const [platform, setPlatform] = useState<'github' | 'gitlab'>('github');
   const [projectId, setProjectId] = useState('');
@@ -76,23 +76,16 @@ export default function BugFix() {
   useEffect(() => {
     if (!platform) return;
 
-    if (platform === 'github' && (!debouncedRepositoryOwner || !debouncedRepositoryName)) {
-      return;
-    }
+    // Create a unique key for these parameters
+    // We fetch global issues for the platform, but we use the platform itself as the key
+    const paramsKey = platform;
 
-    if (platform === 'gitlab' && !debouncedProjectId) {
-      return;
-    }
-
-    // Create a unique key for these parameters to prevent duplicate calls
-    const paramsKey = `${platform}-${debouncedRepositoryOwner}-${debouncedRepositoryName}-${debouncedProjectId}`;
-    
-    // Skip if we just called with the same parameters
+    // Skip if we just called for this platform
     if (lastParamsRef.current === paramsKey) {
       return;
     }
 
-    // Skip if already loading (prevent concurrent calls)
+    // Skip if already loading
     if (loadingRef.current) {
       return;
     }
@@ -104,9 +97,6 @@ export default function BugFix() {
       try {
         const result = await getAssignedIssuesRef.current({
           platform,
-          owner: debouncedRepositoryOwner || undefined,
-          repo: debouncedRepositoryName || undefined,
-          projectId: debouncedProjectId || undefined,
         });
 
         if (result?.issues) {
@@ -114,7 +104,6 @@ export default function BugFix() {
         }
       } catch (error) {
         logger.error('Failed to load issues', error);
-        // Reset lastParamsRef on error so we can retry
         lastParamsRef.current = '';
       } finally {
         loadingRef.current = false;
@@ -122,7 +111,30 @@ export default function BugFix() {
     };
 
     loadIssues();
-  }, [platform, debouncedRepositoryOwner, debouncedRepositoryName, debouncedProjectId]);
+  }, [platform]);
+
+  // Filter issues based on selection
+  const filteredIssues = issues.filter(issue => {
+    const issueRepo = (issue as any).repository;
+
+    if (platform === 'github') {
+      if (!debouncedRepositoryOwner || !debouncedRepositoryName) {
+        return true; // Show all if no repo selected
+      }
+      return issueRepo &&
+        issueRepo.owner?.toLowerCase() === debouncedRepositoryOwner.toLowerCase() &&
+        issueRepo.name?.toLowerCase() === debouncedRepositoryName.toLowerCase();
+    } else {
+      if (!debouncedProjectId) {
+        return true; // Show all if no project selected
+      }
+      return issueRepo && String(issueRepo.id) === String(debouncedProjectId);
+    }
+  });
+
+  const isRepoSelected = platform === 'github'
+    ? (debouncedRepositoryOwner && debouncedRepositoryName)
+    : debouncedProjectId;
 
   const handleFixBug = async (issue: Issue) => {
     if (!platform) return;
@@ -330,14 +342,16 @@ export default function BugFix() {
               )}
             </div>
 
-            {issues.length === 0 && !loadingIssues && (
+            {filteredIssues.length === 0 && !loadingIssues && (
               <p className={styles.issueList.empty}>
-                No issues assigned to you found. Make sure you've selected the correct repository/project.
+                {isRepoSelected
+                  ? "No issues assigned to you found in this repository."
+                  : "No issues assigned to you found on this platform."}
               </p>
             )}
 
             <div className={styles.issueList.container}>
-              {issues.map((issue) => (
+              {filteredIssues.map((issue) => (
                 <div
                   key={issue.id}
                   className={styles.issue.container}
