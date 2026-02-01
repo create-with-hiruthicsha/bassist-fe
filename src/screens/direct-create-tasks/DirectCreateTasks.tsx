@@ -19,7 +19,7 @@ export default function DirectCreateTasks() {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const { repositoryOwner, setRepositoryOwner, repositoryName, setRepositoryName } = useRepository();
   const [jiraProjectKey, setJiraProjectKey] = useState('');
-  const [autoAssignResources, setAutoAssignResources] = useState(false);
+  const [autoAssignResources, setAutoAssignResources] = useState(true);
   const [isIntegrationsModalOpen, setIsIntegrationsModalOpen] = useState(false);
   const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([]);
 
@@ -324,9 +324,9 @@ export default function DirectCreateTasks() {
                 onChange={(e) => setAutoAssignResources(e.target.checked)}
                 className={styles.checkbox.input}
               />
-              <span className={styles.checkbox.label}>
+              {/* <span className={styles.checkbox.label}>
                 Auto-assign resources
-              </span>
+              </span> */}
             </label>
           </div>
 

@@ -21,7 +21,7 @@ export default function CreateTasks() {
   const [tasks, setTasks] = useState<TaskBreakdown | undefined>(undefined);
   const { repositoryOwner, setRepositoryOwner, repositoryName, setRepositoryName } = useRepository();
   const [jiraProjectKey, setJiraProjectKey] = useState('');
-  const [autoAssignResources, setAutoAssignResources] = useState(false);
+  const [autoAssignResources, setAutoAssignResources] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isIntegrationsModalOpen, setIsIntegrationsModalOpen] = useState(false);
   const [platformRefreshKey, setPlatformRefreshKey] = useState(0);
@@ -211,9 +211,9 @@ export default function CreateTasks() {
                 onChange={(e) => setAutoAssignResources(e.target.checked)}
                 className={styles.options.checkbox}
               />
-              <span className={styles.options.label}>
+              {/* <span className={styles.options.label}>
                 Auto-assign resources
-              </span>
+              </span> */}
             </label>
           </div>
 

@@ -6,6 +6,7 @@ import { logger } from '../../lib/utils/logger';
 import { type PlanningPlatform } from '../../lib';
 import PlatformSelectorWithResources from '../../components/PlatformSelectorWithResources';
 import ReactMarkdown from 'react-markdown';
+import MermaidDiagram from '../../components/MermaidDiagram';
 import { useRepository } from '../../context/RepositoryContext';
 import { styles } from './styles';
 
@@ -66,6 +67,22 @@ export default function AIActions() {
 
     return () => clearTimeout(timer);
   }, [selectedPlatform, repositoryOwner, repositoryName, getBranches]);
+
+  // Custom renderer for code blocks to handle Mermaid diagrams
+  const CodeBlock = ({ inline, className, children, ...props }: { inline?: boolean; className?: string; children?: React.ReactNode }) => {
+    const match = /language-(\w+)/.exec(className || '');
+    const language = match ? match[1] : '';
+
+    if (!inline && language === 'mermaid') {
+      return <MermaidDiagram chart={String(children).replace(/\n$/, '')} />;
+    }
+
+    return (
+      <code className={className} {...props}>
+        {children}
+      </code>
+    );
+  };
 
   const handleExecute = async () => {
     if (!query.trim()) {
@@ -229,9 +246,9 @@ export default function AIActions() {
                     <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
                       <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Full AI Output</span>
                     </div>
-                    <div className="p-4 bg-white dark:bg-gray-900">
-                      <div className="prose dark:prose-invert max-w-none text-sm">
-                        <ReactMarkdown>{result}</ReactMarkdown>
+                    <div className="p-4 bg-white dark:bg-gray-900 overflow-y-auto max-h-[500px]">
+                      <div className="markdown-content">
+                        <ReactMarkdown components={{ code: CodeBlock }}>{result}</ReactMarkdown>
                       </div>
                     </div>
                   </div>

@@ -24,7 +24,7 @@ export default function DocumentGenerator() {
     result: generatedDoc
   } = useDocumentGenerationWithProgress();
   const [inputText, setInputText] = useState('');
-  const [includeFlowcharts, setIncludeFlowcharts] = useState(false);
+  const [includeFlowcharts, setIncludeFlowcharts] = useState(true);
   const [format, setFormat] = useState<GenOptionsFormat>('markdown');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [contentToShow, setContentToShow] = useState<string | ArrayBuffer>(generatedDoc?.output || streamingContent);
@@ -186,10 +186,8 @@ export default function DocumentGenerator() {
               </div>
             </div>
 
-            {/* Bottom Section - Options and Generate Button */}
             <div className={styles.section.divider}>
-              {/* Flowcharts Option */}
-              <div className={styles.options.container}>
+              {/* <div className={styles.options.container}>
                 <label className={styles.options.label}>
                   <input
                     type="checkbox"
@@ -201,9 +199,8 @@ export default function DocumentGenerator() {
                     Include flowcharts and diagrams
                   </span>
                 </label>
-              </div>
+              </div> */}
 
-              {/* Format Selection - Full Width */}
               <div className={styles.formatSelect.container}>
                 <label className={styles.formatSelect.label}>
                   Output Format
