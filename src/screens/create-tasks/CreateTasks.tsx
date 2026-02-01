@@ -1,31 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCreateTasksWithProgress } from '../../hooks/useApi';
 import { useAuth } from '../../hooks/useAuth';
-import { TaskBreakdown, PlanningPlatform, PLATFORM_WITH_CODE_REPOSITORY, integrationService } from '../../lib';
+import { TaskBreakdown, PlanningPlatform, PLATFORM_WITH_CODE_REPOSITORY } from '../../lib';
 import PlatformSelectorWithResources from '../../components/PlatformSelectorWithResources';
 import FileUpload from '../../components/FileUpload';
 import { logger } from '../../lib/utils/logger';
 import SuccessScreen from './components/SuccessScreen';
 import IntegrationsModal from '../../components/IntegrationsModal';
-import { useCallback } from 'react';
+import { useRepository } from '../../context/RepositoryContext';
+import { styles } from './styles';
 
 export default function CreateTasks() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [tasks, setTasks] = useState<TaskBreakdown | undefined>(undefined);
-  const [platform, setPlatform] = useState<PlanningPlatform>('' as PlanningPlatform);
-  const [selectedPlatform, setSelectedPlatform] = useState<PlanningPlatform>(platform);
+  const [selectedPlatform, setSelectedPlatform] = useState<PlanningPlatform | ''>('');
   const [textInput, setTextInput] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [repositoryName, setRepositoryName] = useState('');
-  const [repositoryOwner, setRepositoryOwner] = useState('');
+  const [tasks, setTasks] = useState<TaskBreakdown | undefined>(undefined);
+  const { repositoryOwner, setRepositoryOwner, repositoryName, setRepositoryName } = useRepository();
   const [jiraProjectKey, setJiraProjectKey] = useState('');
   const [autoAssignResources, setAutoAssignResources] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isIntegrationsModalOpen, setIsIntegrationsModalOpen] = useState(false);
-  const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([]);
+  const [platformRefreshKey, setPlatformRefreshKey] = useState(0);
 
   const { 
     createTasksWithProgress, 
@@ -36,21 +35,11 @@ export default function CreateTasks() {
     completed 
   } = useCreateTasksWithProgress();
 
-  const needsRepo = PLATFORM_WITH_CODE_REPOSITORY.includes(selectedPlatform);
+  const needsRepo = selectedPlatform ? PLATFORM_WITH_CODE_REPOSITORY.includes(selectedPlatform as PlanningPlatform) : false;
 
-  const checkConnections = useCallback(() => {
-    const connected = integrationService.getProviders()
-      .filter(p => p.connected)
-      .map(p => p.id);
-    
-    setConnectedPlatforms(connected);
+  const handleIntegrationsStatusChange = useCallback(() => {
+    setPlatformRefreshKey((prev) => prev + 1);
   }, []);
-
-  useEffect(() => {
-    checkConnections();
-    // Also refresh from server
-    integrationService.fetchUserIntegrations().then(checkConnections);
-  }, [checkConnections]);
 
   // Load tasks and platform from session storage
   useEffect(() => {
@@ -66,7 +55,6 @@ export default function CreateTasks() {
     }
     
     if (storedPlatform) {
-      setPlatform(storedPlatform as PlanningPlatform);
       setSelectedPlatform(storedPlatform as PlanningPlatform);
     }
   }, []);
@@ -130,30 +118,30 @@ export default function CreateTasks() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      <header className="border-b border-gray-100 dark:border-gray-800">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <div className={styles.headerContent}>
           <button
             onClick={() => navigate('/tasks')}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+            className={styles.backButton}
           >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">Back</span>
+            <ArrowLeft className={styles.backIcon} />
+            <span className={styles.backText}>Back</span>
           </button>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <div className="mb-8 sm:mb-12">
-          <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+      <main className={styles.main}>
+        <div className={styles.titleSection}>
+          <h1 className={styles.title}>
             Create Tasks
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Configure platform and create your tasks</p>
+          <p className={styles.subtitle}>Select a platform and create actionable tasks</p>
         </div>
 
-        <div className="space-y-6">
+        <div className={styles.contentSpace}>
           {/* Platform + Resource Selection */}
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6">
+          <div className={styles.section.container}>
             <PlatformSelectorWithResources
               selectedPlatform={selectedPlatform}
               onSelectedPlatformChange={setSelectedPlatform}
@@ -167,18 +155,19 @@ export default function CreateTasks() {
               onJiraProjectKeyChange={setJiraProjectKey}
               disabled={isCreating}
               onRequireIntegrations={() => setIsIntegrationsModalOpen(true)}
+              refreshKey={platformRefreshKey}
             />
           </div>
 
           {/* Task Input Options */}
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6">
-            <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4">
+          <div className={styles.section.container}>
+            <h3 className={styles.section.title}>
               Task Input (Auto-populated with generated tasks)
             </h3>
             
             {/* File Upload */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+            <div className={styles.section.marginBottom}>
+              <label className={styles.section.label}>
                 Upload DOCX File
               </label>
               <FileUpload
@@ -196,7 +185,7 @@ export default function CreateTasks() {
 
             {/* Text Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+              <label className={styles.section.label}>
                 Task Details (JSON format)
               </label>
               <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
@@ -207,22 +196,22 @@ export default function CreateTasks() {
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
                 placeholder="Task breakdown in JSON format (auto-populated from generated tasks)..."
-                className="w-full h-32 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 dark:focus:ring-blue-400 focus:border-transparent resize-none font-mono text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
+                className={styles.input.textarea}
               />
             </div>
           </div>
 
           {/* Options */}
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6">
-            <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4">Options</h3>
-            <label className="flex items-center gap-3 cursor-pointer">
+          <div className={styles.section.container}>
+            <h3 className={styles.section.title}>Options</h3>
+            <label className={styles.options.container}>
               <input
                 type="checkbox"
                 checked={autoAssignResources}
                 onChange={(e) => setAutoAssignResources(e.target.checked)}
-                className="w-5 h-5 text-blue-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-700 dark:focus:ring-blue-400"
+                className={styles.options.checkbox}
               />
-              <span className="text-sm text-gray-900 dark:text-gray-100">
+              <span className={styles.options.label}>
                 Auto-assign resources
               </span>
             </label>
@@ -230,38 +219,38 @@ export default function CreateTasks() {
 
           {/* Task Summary */}
           {tasks && (
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Generated Task Summary</h3>
-                <span className="text-sm text-gray-600 dark:text-gray-400">{tasks.summary.number_of_tasks} tasks</span>
+            <div className={styles.summary.container}>
+              <div className={styles.summary.header}>
+                <h3 className={styles.summary.title}>Generated Task Summary</h3>
+                <span className={styles.summary.count}>{tasks.summary.number_of_tasks} tasks</span>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm mb-4">
+              <div className={styles.summary.grid}>
                 <div>
-                  <span className="text-gray-700 dark:text-gray-300 font-medium">{tasks.summary.number_of_epics}</span>
-                  <span className="text-gray-600 dark:text-gray-400 ml-1">epics</span>
+                  <span className={styles.summary.value}>{tasks.summary.number_of_epics}</span>
+                  <span className={styles.summary.label}>epics</span>
                 </div>
                 <div>
-                  <span className="text-gray-700 dark:text-gray-300 font-medium">{tasks.summary.number_of_tasks}</span>
-                  <span className="text-gray-600 dark:text-gray-400 ml-1">tasks</span>
+                  <span className={styles.summary.value}>{tasks.summary.number_of_tasks}</span>
+                  <span className={styles.summary.label}>tasks</span>
                 </div>
                 <div>
-                  <span className="text-gray-700 dark:text-gray-300 font-medium">{tasks.summary.total_estimated_hours}</span>
-                  <span className="text-gray-600 dark:text-gray-400 ml-1">hours</span>
+                  <span className={styles.summary.value}>{tasks.summary.total_estimated_hours}</span>
+                  <span className={styles.summary.label}>hours</span>
                 </div>
                 <div>
-                  <span className="text-gray-700 dark:text-gray-300 font-medium">{Math.ceil(tasks.summary.total_estimated_hours / 8)}</span>
-                  <span className="text-gray-600 dark:text-gray-400 ml-1">days</span>
+                  <span className={styles.summary.value}>{Math.ceil(tasks.summary.total_estimated_hours / 8)}</span>
+                  <span className={styles.summary.label}>days</span>
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className={styles.summary.listContainer}>
                 {tasks.epics.slice(0, 2).map((epic, epicIdx) => (
-                  <div key={epicIdx} className="text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 px-3 py-2 rounded">
-                    <div className="font-medium">{epic.name}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{epic.tasks.length} tasks</div>
+                  <div key={epicIdx} className={styles.summary.epicCard}>
+                    <div className={styles.summary.epicName}>{epic.name}</div>
+                    <div className={styles.summary.epicCount}>{epic.tasks.length} tasks</div>
                   </div>
                 ))}
                 {tasks.epics.length > 2 && (
-                  <div className="text-sm text-gray-500 dark:text-gray-400 px-3 py-2">
+                  <div className={styles.summary.moreEpics}>
                     +{tasks.epics.length - 2} more epics
                   </div>
                 )}
@@ -271,29 +260,29 @@ export default function CreateTasks() {
 
           {/* Progress Display */}
           {isCreating && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 sm:p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Loader2 className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-spin" />
-                <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100">Creating Tasks</h3>
+            <div className={styles.progress.container}>
+              <div className={styles.progress.header}>
+                <Loader2 className={styles.progress.spinner} />
+                <h3 className={styles.progress.title}>Creating Tasks</h3>
               </div>
               
               {/* Progress Message */}
               {progress && (
                 <div className="mb-4">
-                  <p className="text-sm text-blue-800 dark:text-blue-200">{progress}</p>
+                  <p className={styles.progress.message}>{progress}</p>
                 </div>
               )}
 
               {/* Progress Bar */}
               {taskProgress.length > 0 && (
-                <div className="mb-4">
-                  <div className="flex justify-between text-xs text-blue-700 dark:text-blue-300 mb-2">
+                <div className={styles.progress.barContainer}>
+                  <div className={styles.progress.barHeader}>
                     <span>Progress</span>
                     <span>{taskProgress.length} of {taskProgress[0]?.totalTasks || 0} tasks</span>
                   </div>
-                  <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
+                  <div className={styles.progress.barBg}>
                     <div 
-                      className="bg-blue-600 dark:bg-blue-400 h-2 rounded-full transition-all duration-300"
+                      className={styles.progress.barFill}
                       style={{ 
                         width: `${taskProgress.length > 0 ? (taskProgress.length / (taskProgress[0]?.totalTasks || 1)) * 100 : 0}%` 
                       }}
@@ -304,13 +293,13 @@ export default function CreateTasks() {
 
               {/* Task List */}
               {taskProgress.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="text-xs font-medium text-blue-900 dark:text-blue-100 mb-2">Completed Tasks:</h4>
-                  <div className="max-h-32 overflow-y-auto space-y-1">
+                <div className={styles.progress.listContainer}>
+                  <h4 className={styles.progress.listTitle}>Completed Tasks:</h4>
+                  <div className={styles.progress.list}>
                     {taskProgress.map((task, index) => (
-                      <div key={index} className="flex items-center gap-2 text-xs">
-                        <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                        <span className="text-blue-800 dark:text-blue-200 truncate">{task.taskName}</span>
+                      <div key={index} className={styles.progress.listItem}>
+                        <CheckCircle2 className={styles.progress.listItemIconDone} />
+                        <span className={styles.progress.listItemText}>{task.taskName}</span>
                       </div>
                     ))}
                   </div>
@@ -321,9 +310,9 @@ export default function CreateTasks() {
 
           {/* Error Display */}
           {error && (
-            <div className="flex items-center gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-4 py-3 rounded-lg">
-              <AlertCircle className="w-5 h-5" />
-              <span className="text-sm">{error}</span>
+            <div className={styles.error.container}>
+              <AlertCircle className={styles.error.icon} />
+              <span className={styles.error.text}>{error}</span>
             </div>
           )}
 
@@ -331,7 +320,7 @@ export default function CreateTasks() {
           <button
             onClick={handleCreate}
             disabled={isCreating || (needsRepo && (!repositoryName || !repositoryOwner)) || (selectedPlatform === 'jira' && !jiraProjectKey)}
-            className="w-full px-6 sm:px-8 py-3 sm:py-4 bg-blue-700 text-white font-medium rounded-lg hover:bg-blue-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
+            className={styles.button.create}
           >
             {isCreating ? (
               <>Creating Tasks...</>
@@ -348,7 +337,7 @@ export default function CreateTasks() {
       <IntegrationsModal
         isOpen={isIntegrationsModalOpen}
         onClose={() => setIsIntegrationsModalOpen(false)}
-        onStatusChange={checkConnections}
+        onStatusChange={handleIntegrationsStatusChange}
       />
     </div>
   );

@@ -1,6 +1,7 @@
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { DebugProvider } from './context/DebugContext';
+import { RepositoryProvider } from './context/RepositoryContext';
 import AppRouter from './AppRouter.tsx';
 import { Toaster } from 'react-hot-toast';
 import { GlobalLoaderProvider } from './context/GlobalLoaderContext';
@@ -10,7 +11,9 @@ export const App = () => (
     <GlobalLoaderProvider>
       <AuthProvider>
         <DebugProvider>
-          <AppRouter />
+          <RepositoryProvider>
+            <AppRouter />
+          </RepositoryProvider>
         <Toaster
           position="top-right"
           toastOptions={{

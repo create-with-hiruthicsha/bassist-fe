@@ -166,7 +166,7 @@ export default function PlatformSelectorWithResources({
               onRepositoryNameChange={onRepositoryNameChange}
               disabled={disabled}
               onIntegrationRequired={onRequireIntegrations}
-              horizontal={true}
+              horizontal={false}
             />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

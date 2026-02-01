@@ -6,14 +6,15 @@ import { logger } from '../../lib/utils/logger';
 import { type PlanningPlatform } from '../../lib';
 import PlatformSelectorWithResources from '../../components/PlatformSelectorWithResources';
 import ReactMarkdown from 'react-markdown';
+import { useRepository } from '../../context/RepositoryContext';
+import { styles } from './styles';
 
 export default function AIActions() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<string | null>(null);
   const [selectedPlatform, setSelectedPlatform] = useState<PlanningPlatform | ''>('');
-  const [repositoryOwner, setRepositoryOwner] = useState('');
-  const [repositoryName, setRepositoryName] = useState('');
+  const { repositoryOwner, setRepositoryOwner, repositoryName, setRepositoryName } = useRepository();
   const [gitlabProjectId, setGitlabProjectId] = useState('');
   const [jiraProjectKey, setJiraProjectKey] = useState('');
   const [branch, setBranch] = useState('main');
@@ -87,35 +88,34 @@ export default function AIActions() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      <header className="border-b border-gray-100 dark:border-gray-800">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <div className={styles.headerContent}>
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/')}
-              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+              className={styles.backButton}
             >
-              <ArrowLeft className="w-5 h-5" />
-              Back
+              <ArrowLeft className={styles.backIcon} />
+              <span className={styles.backText}>Back</span>
             </button>
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">AI Actions</h1>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 sm:p-8">
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              Execute AI Command
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Describe what you want to accomplish in natural language. AI will use available integrations to get it done.
-            </p>
-          </div>
+      <main className={styles.main}>
+        <div className={styles.titleSection}>
+          <h1 className={styles.title}>
+            AI Actions
+          </h1>
+          <p className={styles.subtitle}>
+            Describe what you want to accomplish in natural language. AI will use available integrations to get it done.
+          </p>
+        </div>
 
+        <div className={styles.card}>
           {/* Platform & resource selection */}
-          <div className="mb-6">
+          <div className={styles.platformSection}>
             <PlatformSelectorWithResources
               selectedPlatform={selectedPlatform}
               onSelectedPlatformChange={setSelectedPlatform}
@@ -160,37 +160,37 @@ export default function AIActions() {
             </div>
           )}
 
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+          <div className={styles.inputSection}>
+            <label className={styles.label}>
               What would you like to do?
             </label>
             <textarea
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full h-48 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 dark:focus:ring-blue-400 focus:border-transparent resize-none text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
+              className={styles.textarea}
               placeholder="e.g., Create a new issue in my GitHub repo, List all open Jira tickets, Update the status of issue #123..."
               disabled={loading}
             />
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400" />
-                <span className="text-red-700 dark:text-red-300 font-medium">Error</span>
+            <div className={styles.error.container}>
+              <div className={styles.error.content}>
+                <AlertCircle className={styles.error.icon} />
+                <span className={styles.error.text}>Error</span>
               </div>
-              <p className="text-red-600 dark:text-red-400 mt-1">{error}</p>
+              <p className={styles.error.message}>{error}</p>
             </div>
           )}
 
           {loading && (
-            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-              <div className="flex items-center gap-2">
-                <Loader2 className="w-5 h-5 text-blue-500 dark:text-blue-400 animate-spin" />
-                <div className="flex-1">
-                  <span className="text-blue-700 dark:text-blue-300 font-medium">Executing...</span>
+            <div className={styles.loading.container}>
+              <div className={styles.loading.header}>
+                <Loader2 className={styles.loading.icon} />
+                <div className={styles.loading.textWrapper}>
+                  <span className={styles.loading.title}>Executing...</span>
                   {progressMessage && (
-                    <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">{progressMessage}</p>
+                    <p className={styles.loading.message}>{progressMessage}</p>
                   )}
                 </div>
               </div>
@@ -198,21 +198,21 @@ export default function AIActions() {
           )}
 
           {result && !loading && (
-            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 className="w-5 h-5 text-green-500 dark:text-green-400" />
-                <span className="text-green-700 dark:text-green-300 font-medium">Result</span>
+            <div className={styles.result.container}>
+              <div className={styles.result.header}>
+                <CheckCircle2 className={styles.result.icon} />
+                <span className={styles.result.title}>Result</span>
               </div>
-              <div className="w-full border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 p-4 markdown-content">
+              <div className={styles.result.content}>
                 <ReactMarkdown>{result}</ReactMarkdown>
               </div>
             </div>
           )}
 
-          <div className="flex gap-4">
+          <div className={styles.actions.container}>
             <button
               onClick={() => navigate('/')}
-              className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className={styles.actions.cancel}
               disabled={loading}
             >
               Cancel
@@ -220,9 +220,9 @@ export default function AIActions() {
             <button
               onClick={handleExecute}
               disabled={loading || !query.trim()}
-              className="px-6 py-3 bg-blue-700 text-white font-medium rounded-lg hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className={styles.actions.submit}
             >
-              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              {loading && <Loader2 className={styles.actions.spinner} />}
               Execute
             </button>
           </div>

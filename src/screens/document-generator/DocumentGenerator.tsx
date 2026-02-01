@@ -8,7 +8,9 @@ import MermaidDiagram from '../../components/MermaidDiagram';
 import FileUpload from '../../components/FileUpload';
 import DocxRenderer from '../../components/DocxRenderer';
 import GitHubRepositorySelector from '../../components/GitHubRepositorySelector';
+import { useRepository } from '../../context/RepositoryContext';
 import { logger } from '../../lib/utils/logger';
+import { styles } from './styles';
 
 export default function DocumentGenerator() {
   const navigate = useNavigate();
@@ -26,8 +28,7 @@ export default function DocumentGenerator() {
   const [format, setFormat] = useState<GenOptionsFormat>('markdown');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [contentToShow, setContentToShow] = useState<string | ArrayBuffer>(generatedDoc?.output || streamingContent);
-  const [repositoryOwner, setRepositoryOwner] = useState('');
-  const [repositoryName, setRepositoryName] = useState('');
+  const { repositoryOwner, setRepositoryOwner, repositoryName, setRepositoryName } = useRepository();
 
   useEffect(() => {
     setContentToShow(generatedDoc?.output || streamingContent);
@@ -104,36 +105,36 @@ export default function DocumentGenerator() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      <header className="border-b border-gray-100 dark:border-gray-800">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <div className={styles.headerContent}>
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+            className={styles.backButton}
           >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">Back</span>
+            <ArrowLeft className={styles.backIcon} />
+            <span className={styles.backText}>Back</span>
           </button>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <div className="mb-8 sm:mb-12">
-          <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+      <main className={styles.main}>
+        <div className={styles.titleSection}>
+          <h1 className={styles.title}>
             Document Generator
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+          <p className={styles.subtitle}>
             Generate comprehensive documentation from your project details
           </p>
         </div>
 
-        <div className="space-y-8">
+        <div className={styles.contentSpace}>
           {/* Repository Selection (Optional) */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-            <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+          <div className={styles.card}>
+            <h3 className={styles.section.title}>
               Repository Context (Optional)
             </h3>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mb-4">
+            <p className={styles.section.description}>
               Select a repository to include its issues and context in the documentation generation
             </p>
             <GitHubRepositorySelector
@@ -146,19 +147,19 @@ export default function DocumentGenerator() {
           </div>
 
           {/* Input Section */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-            <div className="grid grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
+          <div className={styles.card}>
+            <div className={styles.section.grid}>
               {/* Left Column - Text Input */}
               <div>
                 <label
                   htmlFor="doc-input"
-                  className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-3"
+                  className={styles.section.label}
                 >
                   Project Details
                 </label>
                 <textarea
                   id="doc-input"
-                  className="w-full h-64 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 dark:focus:ring-blue-400 focus:border-transparent resize-none text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700"
+                  className={styles.textarea}
                   placeholder="Describe your project architecture, features, APIs, database schema..."
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
@@ -167,7 +168,7 @@ export default function DocumentGenerator() {
 
               {/* Right Column - File Upload */}
               <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
+                <label className={styles.section.label}>
                   Attachments (Optional)
                 </label>
                 <FileUpload
@@ -180,51 +181,43 @@ export default function DocumentGenerator() {
                   description="DOCX and image files, max 10MB each"
                   allowedTypes={['application/vnd.openxmlformats-officedocument.wordprocessingml.document']}
                   allowedExtensions={['.docx']}
-                  uploadAreaClassName="h-64 flex flex-col justify-center"
+                  uploadAreaClassName={styles.fileUpload.area}
                 />
               </div>
             </div>
 
             {/* Bottom Section - Options and Generate Button */}
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <div className={styles.section.divider}>
               {/* Flowcharts Option */}
-              <div className="mb-4">
-                <label className="flex items-center gap-3 cursor-pointer">
+              <div className={styles.options.container}>
+                <label className={styles.options.label}>
                   <input
                     type="checkbox"
                     checked={includeFlowcharts}
                     onChange={(e) => setIncludeFlowcharts(e.target.checked)}
-                    className="w-5 h-5 text-blue-700 border-gray-300 rounded focus:ring-blue-700"
+                    className={styles.options.checkbox}
                   />
-                  <span className="text-sm text-gray-900 dark:text-gray-100">
+                  <span className={styles.options.text}>
                     Include flowcharts and diagrams
                   </span>
                 </label>
               </div>
 
               {/* Format Selection - Full Width */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
+              <div className={styles.formatSelect.container}>
+                <label className={styles.formatSelect.label}>
                   Output Format
                 </label>
-                <div className="flex gap-2">
+                <div className={styles.formatSelect.group}>
                   <button
                     onClick={() => setFormat('markdown')}
-                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      format === 'markdown'
-                        ? 'bg-blue-700 text-white'
-                        : 'bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600'
-                    }`}
+                    className={format === 'markdown' ? styles.formatSelect.button.active : styles.formatSelect.button.inactive}
                   >
                     Markdown
                   </button>
                   <button
                     onClick={() => setFormat('docx')}
-                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      format === 'docx'
-                        ? 'bg-blue-700 text-white'
-                        : 'bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600'
-                    }`}
+                    className={format === 'docx' ? styles.formatSelect.button.active : styles.formatSelect.button.inactive}
                   >
                     DOCX
                   </button>
@@ -233,9 +226,9 @@ export default function DocumentGenerator() {
 
               {/* Error Display */}
               {error && (
-                <div className="flex items-center gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-4 py-3 rounded-lg mb-4">
-                  <AlertCircle className="w-5 h-5" />
-                  <span className="text-sm">{error}</span>
+                <div className={styles.error.container}>
+                  <AlertCircle className={styles.error.icon} />
+                  <span className={styles.error.text}>{error}</span>
                 </div>
               )}
 
@@ -243,9 +236,9 @@ export default function DocumentGenerator() {
               <button
                 onClick={handleGenerate}
                 disabled={(!inputText && attachments.length === 0) || isGenerating}
-                className="w-full px-6 py-3 bg-blue-700 text-white font-medium rounded-lg hover:bg-blue-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className={styles.generateButton}
               >
-                <Sparkles className="w-5 h-5" />
+                <Sparkles className={styles.buttonIcon} />
                 {isGenerating ? 'Generating...' : 'Generate Documentation'}
               </button>
             </div>
@@ -253,22 +246,22 @@ export default function DocumentGenerator() {
 
           {/* Output Section */}
           {(generatedDoc?.output || streamingContent || isGenerating) ? (
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-700" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+            <div className={styles.preview.container}>
+              <div className={styles.preview.header}>
+                <div className={styles.preview.titleWrapper}>
+                  <FileText className={styles.preview.titleIcon} />
+                  <h3 className={styles.preview.title}>
                     Generated Document
                   </h3>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-gray-500 dark:text-gray-400 uppercase">{format}</span>
+                <div className={styles.preview.actions}>
+                  <span className={styles.preview.formatBadge}>{format}</span>
                   {completed && generatedDoc?.output && (
                     <button
                       onClick={handleDownload}
-                      className="px-4 py-2 bg-blue-700 text-white text-sm font-medium rounded-lg hover:bg-blue-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2 flex items-center gap-2"
+                      className={styles.preview.downloadButton}
                     >
-                      <Download className="w-4 h-4" />
+                      <Download className={styles.preview.downloadIcon} />
                       Download
                     </button>
                   )}
@@ -277,27 +270,27 @@ export default function DocumentGenerator() {
 
               {/* Progress indicator */}
               {isGenerating && progress && (
-                <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 dark:border-blue-400"></div>
-                    <span className="text-sm text-blue-700 dark:text-blue-300">{progress}</span>
+                <div className={styles.preview.progress.container}>
+                  <div className={styles.preview.progress.content}>
+                    <div className={styles.preview.progress.spinner}></div>
+                    <span className={styles.preview.progress.text}>{progress}</span>
                   </div>
                 </div>
               )}
 
               {/* Document Content */}
-              <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+              <div className={styles.preview.content.wrapper}>
                 {(() => {
                   if (!contentToShow) return null;
 
                   if (format === 'docx') {
                     // For DOCX, show a document preview using a DOCX renderer
                     return (
-                      <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden min-h-[600px] bg-white dark:bg-gray-900">
+                      <div className={styles.preview.content.docxWrapper}>
                         {contentToShow && typeof contentToShow !== 'string' ? (
                           <DocxRenderer docxBuffer={contentToShow as ArrayBuffer} />
                         ) : (
-                          <div className="flex items-center justify-center h-full min-h-[600px]">
+                          <div className={styles.preview.content.noContent}>
                             <div className="text-center">
                               <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                               <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
@@ -313,14 +306,14 @@ export default function DocumentGenerator() {
                     );
                   } else if (format === 'markdown') {
                     return (
-                      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px]">
+                      <div className={styles.preview.content.splitLayout}>
                         {/* Markdown Editor */}
-                        <div className="border-r border-gray-200 dark:border-gray-700">
-                          <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Markdown Source</h4>
+                        <div className={styles.preview.content.columnLeft}>
+                          <div className={styles.preview.content.headerBar}>
+                            <h4 className={styles.preview.content.headerTitle}>Markdown Source</h4>
                           </div>
                           <textarea
-                            className="w-full h-[600px] p-4 font-mono text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 resize-none focus:outline-none"
+                            className={styles.preview.content.editor}
                             value={typeof contentToShow === 'string' ? contentToShow : ''}
                             onChange={(event) => {
                               setContentToShow(event.target.value);
@@ -332,10 +325,10 @@ export default function DocumentGenerator() {
 
                         {/* Rendered Preview */}
                         <div>
-                          <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Preview</h4>
+                          <div className={styles.preview.content.headerBar}>
+                            <h4 className={styles.preview.content.headerTitle}>Preview</h4>
                           </div>
-                          <div className="p-6 markdown-content h-[600px] overflow-y-auto bg-white dark:bg-gray-900">
+                          <div className={styles.preview.content.markdownPreview}>
                             <ReactMarkdown components={{ code: CodeBlock }}>{typeof contentToShow === 'string' ? contentToShow : ''}</ReactMarkdown>
                           </div>
                         </div>
@@ -343,7 +336,7 @@ export default function DocumentGenerator() {
                     );
                   } else {
                     return (
-                      <pre className="p-6 text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap font-mono min-h-[600px] overflow-y-auto bg-white dark:bg-gray-900">
+                      <pre className={styles.preview.content.rawPre}>
                         {typeof contentToShow === 'string' ? contentToShow : ''}
                       </pre>
                     );
@@ -352,13 +345,13 @@ export default function DocumentGenerator() {
               </div>
             </div>
           ) : (
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-12 flex items-center justify-center">
-              <div className="text-center">
-                <FileText className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+            <div className={styles.preview.empty.container}>
+              <div className={styles.preview.empty.content}>
+                <FileText className={styles.preview.empty.icon} />
+                <h3 className={styles.preview.empty.title}>
                   Ready to Generate Documentation
                 </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className={styles.preview.empty.text}>
                   Fill in the project details above and click "Generate Documentation" to get started
                 </p>
               </div>

@@ -1,28 +1,29 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import IntegrationManager from '../../components/IntegrationManager';
+import { styles } from './styles';
 
 export default function Integrations() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      <header className="border-b border-gray-100 dark:border-gray-800">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <div className={styles.headerContent}>
+          <div className={styles.headerInner}>
+            <div className={styles.headerLeft}>
               <button
                 onClick={() => navigate('/')}
-                className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                className={styles.backButton}
               >
-                <ArrowLeft className="w-4 h-4" />
-                <span className="text-sm font-medium">Back</span>
+                <ArrowLeft className={styles.backIcon} />
+                <span className={styles.backText}>Back</span>
               </button>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100">
+                <h1 className={styles.title}>
                   Integrations
                 </h1>
-                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+                <p className={styles.subtitle}>
                   Connect external services to enhance your workflow
                 </p>
               </div>
@@ -31,15 +32,15 @@ export default function Integrations() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <main className={styles.main}>
         <IntegrationManager />
 
         {/* Help Section */}
-        <div className="mt-12 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3">
+        <div className={styles.help.container}>
+          <h3 className={styles.help.title}>
             How Integrations Work
           </h3>
-          <div className="space-y-3 text-sm text-blue-800 dark:text-blue-200">
+          <div className={styles.help.list}>
             <p>
               • <strong>Connect once:</strong> Authorize access to your external services
             </p>

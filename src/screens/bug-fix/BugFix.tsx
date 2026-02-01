@@ -6,7 +6,9 @@ import { useAuth } from '../../hooks/useAuth';
 import { useDebounce } from '../../hooks/useDebounce';
 import { integrationService } from '../../lib';
 import GitHubRepositorySelector from '../../components/GitHubRepositorySelector';
+import { useRepository } from '../../context/RepositoryContext';
 import { logger } from '../../lib/utils/logger';
+import { styles } from './styles';
 
 interface Issue {
   id: number;
@@ -23,9 +25,8 @@ interface Issue {
 export default function BugFix() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { repositoryOwner, setRepositoryOwner, repositoryName, setRepositoryName } = useRepository();
   const [platform, setPlatform] = useState<'github' | 'gitlab'>('github');
-  const [repositoryOwner, setRepositoryOwner] = useState('');
-  const [repositoryName, setRepositoryName] = useState('');
   const [projectId, setProjectId] = useState('');
   const [issues, setIssues] = useState<Issue[]>([]);
   const [fixingIssueId, setFixingIssueId] = useState<number | null>(null);
@@ -153,36 +154,36 @@ export default function BugFix() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      <header className="border-b border-gray-100 dark:border-gray-800">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <div className={styles.headerContent}>
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+            className={styles.backButton}
           >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">Back</span>
+            <ArrowLeft className={styles.backIcon} />
+            <span className={styles.backText}>Back</span>
           </button>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <div className="mb-8 sm:mb-12">
-          <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+      <main className={styles.main}>
+        <div className={styles.titleSection}>
+          <h1 className={styles.title}>
             Bug Fixing AI
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+          <p className={styles.subtitle}>
             View and fix issues assigned to you using AI
           </p>
         </div>
 
-        <div className="space-y-6">
+        <div className={styles.contentSpace}>
           {/* Platform Selection */}
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6">
-            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-4">
+          <div className={styles.card}>
+            <label className={styles.section.label}>
               Select Platform
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className={styles.platform.grid}>
               {(['github', 'gitlab'] as const).map((p) => {
                 const isConnected = connectedPlatforms.includes(p);
                 return (
@@ -193,17 +194,17 @@ export default function BugFix() {
                         setPlatform(p);
                       }
                     }}
-                    className={`px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+                    className={
                       platform === p
-                        ? 'bg-blue-700 text-white shadow-lg'
+                        ? styles.platform.button.active
                         : isConnected
-                          ? 'bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600'
-                          : 'bg-gray-100 dark:bg-gray-800 border border-dashed border-gray-300 dark:border-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed grayscale'
-                    }`}
+                          ? styles.platform.button.connected
+                          : styles.platform.button.disabled
+                    }
                   >
                     {p === 'github' ? 'GitHub' : 'GitLab'}
                     {!isConnected && (
-                      <span className="block text-xs mt-1 opacity-70">Not Connected</span>
+                      <span className={styles.platform.subText}>Not Connected</span>
                     )}
                   </button>
                 );
@@ -213,8 +214,8 @@ export default function BugFix() {
 
           {/* Repository Configuration */}
           {platform === 'github' && (
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4">
+            <div className={styles.card}>
+              <h3 className={styles.section.title}>
                 Repository Configuration
               </h3>
               {connectedPlatforms.includes('github') ? (
@@ -227,14 +228,14 @@ export default function BugFix() {
                   onIntegrationRequired={() => navigate('/integrations')}
                 />
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className={styles.section.grid}>
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                    <label className={styles.section.label}>
                       Repository Owner
                     </label>
                     <input
                       type="text"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
+                      className={styles.input}
                       placeholder="username or organization"
                       value={repositoryOwner}
                       onChange={(e) => setRepositoryOwner(e.target.value)}
@@ -242,12 +243,12 @@ export default function BugFix() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                    <label className={styles.section.label}>
                       Repository Name
                     </label>
                     <input
                       type="text"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
+                      className={styles.input}
                       placeholder="repository-name"
                       value={repositoryName}
                       onChange={(e) => setRepositoryName(e.target.value)}
@@ -260,17 +261,17 @@ export default function BugFix() {
           )}
 
           {platform === 'gitlab' && (
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4">
+            <div className={styles.card}>
+              <h3 className={styles.section.title}>
                 Project Configuration
               </h3>
               <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                <label className={styles.section.label}>
                   Project ID
                 </label>
                 <input
                   type="text"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 dark:focus:ring-blue-400 focus:border-transparent text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
+                  className={styles.input}
                   placeholder="Enter project ID"
                   value={projectId}
                   onChange={(e) => setProjectId(e.target.value)}
@@ -282,36 +283,36 @@ export default function BugFix() {
 
           {/* Error Display */}
           {issuesError && (
-            <div className="flex items-center gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-4 py-3 rounded-lg">
-              <AlertCircle className="w-5 h-5" />
-              <span className="text-sm">{issuesError}</span>
+            <div className={styles.error.container}>
+              <AlertCircle className={styles.error.icon} />
+              <span className={styles.error.text}>{issuesError}</span>
             </div>
           )}
 
           {fixError && (
-            <div className="flex items-center gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-4 py-3 rounded-lg">
-              <AlertCircle className="w-5 h-5" />
-              <span className="text-sm">{fixError}</span>
+            <div className={styles.error.container}>
+              <AlertCircle className={styles.error.icon} />
+              <span className={styles.error.text}>{fixError}</span>
             </div>
           )}
 
           {/* Success Display */}
           {fixResult && (
-            <div className="flex items-center gap-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-4 py-3 rounded-lg">
-              <CheckCircle2 className="w-5 h-5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium">{fixResult.message}</p>
+            <div className={styles.success.container}>
+              <CheckCircle2 className={styles.success.icon} />
+              <div className={styles.success.content}>
+                <p className={styles.success.title}>{fixResult.message}</p>
                 {fixResult.prUrl && (
                   <a
                     href={fixResult.prUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 mt-1"
+                    className={styles.success.link}
                   >
-                    View PR <ExternalLink className="w-3 h-3" />
+                    View PR <ExternalLink className={styles.success.linkIcon} />
                   </a>
                 )}
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                <p className={styles.success.meta}>
                   {fixResult.filesCreated} file(s) created, {fixResult.tokensUsed} tokens used
                 </p>
               </div>
@@ -319,62 +320,62 @@ export default function BugFix() {
           )}
 
           {/* Issues List */}
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          <div className={styles.card}>
+            <div className={styles.issueList.header}>
+              <h3 className={styles.issueList.title}>
                 Assigned Issues
               </h3>
               {loadingIssues && (
-                <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+                <Loader2 className={styles.issueList.spinner} />
               )}
             </div>
 
             {issues.length === 0 && !loadingIssues && (
-              <p className="text-sm text-gray-600 dark:text-gray-400 text-center py-8">
+              <p className={styles.issueList.empty}>
                 No issues assigned to you found. Make sure you've selected the correct repository/project.
               </p>
             )}
 
-            <div className="space-y-3">
+            <div className={styles.issueList.container}>
               {issues.map((issue) => (
                 <div
                   key={issue.id}
-                  className="bg-white dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
+                  className={styles.issue.container}
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                  <div className={styles.issue.layout}>
+                    <div className={styles.issue.content}>
+                      <div className={styles.issue.header}>
+                        <h4 className={styles.issue.title}>
                           #{issue.number || issue.iid} {issue.title}
                         </h4>
-                        <span className={`text-xs px-2 py-1 rounded ${
+                        <span className={
                           issue.state === 'open' || issue.state === 'opened'
-                            ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400'
-                        }`}>
+                            ? styles.issue.badge.open
+                            : styles.issue.badge.other
+                        }>
                           {issue.state}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
+                      <p className={styles.issue.description}>
                         {issue.body || issue.description || 'No description'}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500">
+                      <p className={styles.issue.meta}>
                         Updated {formatDate(issue.updated_at)}
                       </p>
                     </div>
                     <button
                       onClick={() => handleFixBug(issue)}
                       disabled={fixingBug || fixingIssueId === issue.id}
-                      className="flex-shrink-0 px-4 py-2 bg-blue-700 text-white text-sm font-medium rounded-lg hover:bg-blue-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      className={styles.issue.button}
                     >
                       {fixingBug && fixingIssueId === issue.id ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className={styles.issue.spinner} />
                           Fixing...
                         </>
                       ) : (
                         <>
-                          <CheckCircle2 className="w-4 h-4" />
+                          <CheckCircle2 className={styles.issue.buttonIcon} />
                           Handoff to AI
                         </>
                       )}
