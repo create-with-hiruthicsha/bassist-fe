@@ -1,5 +1,6 @@
 import Modal from './Modal';
 import IntegrationManager from './IntegrationManager';
+import APIKeyManager from './APIKeyManager';
 
 interface IntegrationsModalProps {
   isOpen: boolean;
@@ -21,6 +22,10 @@ export default function IntegrationsModal({ isOpen, onClose, onStatusChange }: I
         </p>
         <IntegrationManager compact onStatusChange={onStatusChange} />
         
+        <div className="mt-8 border-t border-gray-100 dark:border-gray-800 pt-8">
+          <APIKeyManager />
+        </div>
+
         <div className="mt-8 flex justify-end">
           <button
             onClick={onClose}

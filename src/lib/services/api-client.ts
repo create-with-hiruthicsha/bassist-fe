@@ -436,6 +436,38 @@ class ApiClient {
     }
   }
 
+  // API Key Management
+  async listApiKeys(): Promise<{ providers: string[] }> {
+    const headers = await this.getAuthHeaders();
+    const response = await fetch(`${this.baseUrlWithoutVersion}integrations/api-keys`, {
+      method: 'GET',
+      headers
+    });
+    return this.handleResponse<{ providers: string[] }>(response);
+  }
+
+  async upsertApiKey(provider: string, apiKey: string): Promise<{ success: boolean; message: string }> {
+    const headers = await this.getAuthHeaders();
+    const response = await fetch(`${this.baseUrlWithoutVersion}integrations/api-keys`, {
+      method: 'POST',
+      headers: {
+        ...headers,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ provider, apiKey })
+    });
+    return this.handleResponse<{ success: boolean; message: string }>(response);
+  }
+
+  async deleteApiKey(provider: string): Promise<{ success: boolean; message: string }> {
+    const headers = await this.getAuthHeaders();
+    const response = await fetch(`${this.baseUrlWithoutVersion}integrations/api-keys/${provider}`, {
+      method: 'DELETE',
+      headers
+    });
+    return this.handleResponse<{ success: boolean; message: string }>(response);
+  }
+
   async getJiraProjects(): Promise<any[]> {
     const headers = await this.getAuthHeaders();
 
@@ -564,6 +596,25 @@ class ApiClient {
   }): Promise<{ branches: string[] }> {
     const queryParams = new URLSearchParams(params as any).toString();
     return this.get<{ branches: string[] }>(`ai-actions/branches?${queryParams}`);
+  }
+
+  // Background Tasks
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getBackgroundTasks(): Promise<any[]> {
+    return this.get<any[]>('background-tasks');
+  }
+
+  async getBackgroundTaskLogs(id: string): Promise<{ logs: string }> {
+    return this.get<{ logs: string }>(`background-tasks/${id}/logs`);
+  }
+
+  async stopBackgroundTask(id: string): Promise<{ message: string }> {
+    const headers = await this.getAuthHeaders();
+    const response = await fetch(`${this.baseUrl}/background-tasks/${id}`, {
+      method: 'DELETE',
+      headers
+    });
+    return this.handleResponse<{ message: string }>(response);
   }
 
   // Generic methods

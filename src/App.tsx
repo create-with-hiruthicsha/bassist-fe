@@ -5,6 +5,7 @@ import { RepositoryProvider } from './context/RepositoryContext';
 import AppRouter from './AppRouter.tsx';
 import { Toaster } from 'react-hot-toast';
 import { GlobalLoaderProvider } from './context/GlobalLoaderContext';
+import { BackgroundTaskMonitor } from './components/BackgroundTaskMonitor';
 
 export const App = () => (
   <ThemeProvider>
@@ -13,6 +14,7 @@ export const App = () => (
         <DebugProvider>
           <RepositoryProvider>
             <AppRouter />
+            <BackgroundTaskMonitor />
           </RepositoryProvider>
         <Toaster
           position="top-right"

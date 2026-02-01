@@ -580,4 +580,79 @@ export function useGetBranches() {
   };
 }
 
+export interface BackgroundTask {
+  id: string;
+  prompt: string;
+  status: 'running' | 'completed' | 'failed' | 'stopped';
+  startTime: string;
+  logFile: string;
+  pid?: number;
+}
+
+export function useBackgroundTasks() {
+  const api = useApi<BackgroundTask[]>();
+
+  const getTasks = useCallback(async () => {
+    return api.execute(() => apiClient.getBackgroundTasks());
+  }, [api.execute]);
+
+  return {
+    ...api,
+    getTasks,
+  };
+}
+
+export function useBackgroundTaskLogs() {
+  const api = useApi<{ logs: string }>();
+
+  const getLogs = useCallback(async (id: string) => {
+    return api.execute(() => apiClient.getBackgroundTaskLogs(id));
+  }, [api.execute]);
+
+  return {
+    ...api,
+    getLogs,
+  };
+}
+
+export function useStopBackgroundTask() {
+  const api = useApi<{ message: string }>();
+
+  const stopTask = useCallback(async (id: string) => {
+    return api.execute(() => apiClient.stopBackgroundTask(id));
+  }, [api.execute]);
+
+  return {
+    ...api,
+    stopTask,
+  };
+}
+
+export function useApiKeys() {
+  const listApi = useApi<{ providers: string[] }>();
+  const upsertApi = useApi<{ success: boolean; message: string }>();
+  const deleteApi = useApi<{ success: boolean; message: string }>();
+
+  const listApiKeys = useCallback(async () => {
+    return listApi.execute(() => apiClient.listApiKeys());
+  }, [listApi.execute]);
+
+  const upsertApiKey = useCallback(async (provider: string, apiKey: string) => {
+    return upsertApi.execute(() => apiClient.upsertApiKey(provider, apiKey));
+  }, [upsertApi.execute]);
+
+  const deleteApiKey = useCallback(async (provider: string) => {
+    return deleteApi.execute(() => apiClient.deleteApiKey(provider));
+  }, [deleteApi.execute]);
+
+  return {
+    apiKeys: listApi.data?.providers || [],
+    loading: listApi.loading || upsertApi.loading || deleteApi.loading,
+    error: listApi.error || upsertApi.error || deleteApi.error,
+    listApiKeys,
+    upsertApiKey,
+    deleteApiKey,
+  };
+}
+
 export default useApi;

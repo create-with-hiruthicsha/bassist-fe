@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import IntegrationManager from '../../components/IntegrationManager';
+import APIKeyManager from '../../components/APIKeyManager';
 import { styles } from './styles';
 
 export default function Integrations() {
@@ -34,6 +35,10 @@ export default function Integrations() {
 
       <main className={styles.main}>
         <IntegrationManager />
+
+        <div className="mt-12">
+          <APIKeyManager />
+        </div>
 
         {/* Help Section */}
         <div className={styles.help.container}>
