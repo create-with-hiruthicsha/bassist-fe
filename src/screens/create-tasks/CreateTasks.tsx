@@ -204,7 +204,7 @@ export default function CreateTasks() {
           {/* Options */}
           <div className={styles.section.container}>
             <h3 className={styles.section.title}>Options</h3>
-            <label className={styles.options.container}>
+            {/* <label className={styles.options.container}>
               <input
                 type="checkbox"
                 checked={autoAssignResources}
@@ -214,7 +214,7 @@ export default function CreateTasks() {
               {/* <span className={styles.options.label}>
                 Auto-assign resources
               </span> */}
-            </label>
+            {/* </label> */}
           </div>
 
           {/* Task Summary */}

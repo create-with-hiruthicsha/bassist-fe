@@ -317,17 +317,17 @@ export default function DirectCreateTasks() {
           </div>
 
           <div className={styles.section.marginBottom}>
-            <label className={styles.checkbox.container}>
+            {/* <label className={styles.checkbox.container}>
               <input
                 type="checkbox"
                 checked={autoAssignResources}
                 onChange={(e) => setAutoAssignResources(e.target.checked)}
                 className={styles.checkbox.input}
-              />
+              /> */}
               {/* <span className={styles.checkbox.label}>
                 Auto-assign resources
               </span> */}
-            </label>
+            {/* </label> */}
           </div>
 
           {error && (
