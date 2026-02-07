@@ -30,6 +30,7 @@ export default function TaskGenerator() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [isIntegrationsModalOpen, setIsIntegrationsModalOpen] = useState(false);
   const [platformRefreshKey, setPlatformRefreshKey] = useState(0);
+  const [parseError, setParseError] = useState<string | null>(null);
 
   const {
     generateTasksWithProgress,
@@ -53,6 +54,7 @@ export default function TaskGenerator() {
     }
 
     setTaskBreakdown(null);
+    setParseError(null);
 
     try {
       const request = {
@@ -70,21 +72,41 @@ export default function TaskGenerator() {
   };
 
 
-  // Handle completion and parse result
+  // Handle completion and parse result – accept data in any shape the backend sends
   useEffect(() => {
     if (completed && result) {
-      // Handle both 'output' and 'response' fields for backward compatibility
-      const responseData =
-        typeof result === 'object' && result !== null
-          ? (result as { output?: string; response?: string }).output ||
-            (result as { output?: string; response?: string }).response
-          : undefined;
-      if (responseData && typeof responseData === 'string') {
+      setParseError(null);
+      if (result.status === 'error') return;
+
+      const r = result as unknown as Record<string, unknown>;
+      const outputOrResponse = r?.output ?? r?.response;
+
+      // Already the task breakdown object (e.g. stream sent parsed object)
+      if (outputOrResponse && typeof outputOrResponse === 'object' && !Array.isArray(outputOrResponse)) {
+        const obj = outputOrResponse as { epics?: unknown[]; summary?: unknown };
+        if (Array.isArray(obj?.epics) && obj?.summary) {
+          setTaskBreakdown(obj as TaskBreakdown);
+          return;
+        }
+      }
+
+      // Result itself is the task breakdown (epics/summary at top level)
+      const resultObj = result as unknown as { epics?: unknown[]; summary?: unknown };
+      if (Array.isArray(resultObj?.epics) && resultObj?.summary) {
+        setTaskBreakdown(result as unknown as TaskBreakdown);
+        return;
+      }
+
+      // String: parse and use
+      if (typeof outputOrResponse === 'string' && outputOrResponse.trim()) {
         try {
-          const parsed = parseTaskBreakdown(responseData);
-          setTaskBreakdown(parsed);
-        } catch (e) {
-          logger.error('Failed to parse generated tasks', e);
+          const parsed = parseTaskBreakdown(outputOrResponse);
+          if (parsed?.epics && Array.isArray(parsed.epics) && parsed?.summary) {
+            setTaskBreakdown(parsed);
+          }
+        } catch {
+          // Only show parse error when we have no other way to get data
+          setParseError('Could not parse task data.');
         }
       }
     }
@@ -283,10 +305,10 @@ export default function TaskGenerator() {
           )}
 
           {/* Error Display */}
-          {error && (
+          {(error || parseError) && (
             <div className={styles.error.container}>
               <AlertCircle className={styles.error.icon} />
-              <span className={styles.error.text}>{error}</span>
+              <span className={styles.error.text}>{error || parseError}</span>
             </div>
           )}
 

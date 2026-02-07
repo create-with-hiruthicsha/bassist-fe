@@ -338,28 +338,38 @@ class ApiClient {
     }
   }
 
-  // Task Breakdown Parser
+  // Task Breakdown Parser – accepts string or already-parsed object so we never throw when data is present
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  parseTaskBreakdown(response: string): any {
+  parseTaskBreakdown(response: string | Record<string, unknown>): any {
+    if (response !== null && typeof response === 'object' && !Array.isArray(response)) {
+      const obj = response as { epics?: unknown[]; summary?: unknown; response?: string };
+      if (Array.isArray(obj.epics) && obj.summary) return response;
+      if (typeof obj.response === 'string') return this.parseTaskBreakdown(obj.response);
+    }
+    const trimmed = typeof response === 'string' ? String(response).trim() : '';
+    if (!trimmed) throw new Error('Empty response from server');
     try {
-      // Try to parse as JSON first
-      if (response.trim().startsWith('{') || response.trim().startsWith('[')) {
-        return JSON.parse(response);
+      let parsed: unknown;
+      if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        parsed = JSON.parse(trimmed);
+      } else {
+        const jsonMatch = trimmed.match(/```json\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+          parsed = JSON.parse(jsonMatch[1].trim());
+        } else {
+          const jsonObjectMatch = trimmed.match(/\{[\s\S]*\}/);
+          if (jsonObjectMatch) parsed = JSON.parse(jsonObjectMatch[0]);
+          else throw new Error('No valid JSON found in response');
+        }
       }
-
-      // Try to extract JSON from markdown
-      const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[1]);
+      const obj = parsed as Record<string, unknown>;
+      if (obj && typeof obj.response === 'string' && !Array.isArray(obj.epics)) {
+        return this.parseTaskBreakdown(obj.response);
       }
-
-      // Try to find JSON object in the text
-      const jsonObjectMatch = response.match(/\{[\s\S]*\}/);
-      if (jsonObjectMatch) {
-        return JSON.parse(jsonObjectMatch[0]);
+      if (typeof parsed === 'string' && (parsed.startsWith('{') || parsed.startsWith('['))) {
+        return this.parseTaskBreakdown(parsed);
       }
-
-      throw new Error('No valid JSON found in response');
+      return parsed;
     } catch (error) {
       throw ErrorHandler.handleParseError(error as Error, 'Failed to parse task breakdown response');
     }

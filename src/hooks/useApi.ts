@@ -147,8 +147,14 @@ export function useTaskGenerationWithProgress() {
           setLoading(false);
         },
         (result: TaskGenerationResponse) => {
-          setResult(result);
-          setCompleted(true);
+          if (result.status === 'error' && result.response) {
+            setError(result.response);
+            setResult(null);
+            setCompleted(false);
+          } else {
+            setResult(result);
+            setCompleted(true);
+          }
           setLoading(false);
         }
       );
