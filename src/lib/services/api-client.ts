@@ -308,30 +308,14 @@ class ApiClient {
               onProgress(event);
 
               if (event.type === 'complete') {
-                // Extract the final result from the complete event.
-                // Backend may send two complete events: one with a plain success message,
-                // one with the actual JSON payload. Only use the payload as result; never
-                // overwrite a valid result with a plain string message.
+                // Backend sends a single complete event with JSON payload only.
                 try {
                   const parsedResult = JSON.parse(event.message);
                   if (typeof parsedResult === 'object' && parsedResult !== null) {
-                    // Prefer payloads that contain the actual data (response/output)
-                    const hasPayload =
-                      (parsedResult as { response?: string; output?: string }).response != null ||
-                      (parsedResult as { response?: string; output?: string }).output != null;
-                    if (hasPayload) {
-                      result = parsedResult as T;
-                    } else if (!result) {
-                      result = parsedResult as T;
-                    }
-                  } else if (!result) {
-                    result = event.message as T;
+                    result = parsedResult as T;
                   }
                 } catch {
-                  // Plain text message (e.g. "Task breakdown generated successfully!") – only use if we have no result yet
-                  if (!result) {
-                    result = event.message as T;
-                  }
+                  // Ignore non-JSON complete messages
                 }
               }
             }
