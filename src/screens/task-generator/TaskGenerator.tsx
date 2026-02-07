@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Clock, FolderGit2, CheckCircle2, AlertCircle, Edit3, Save, X, Loader2, Settings } from 'lucide-react';
+import { Clock, FolderGit2, CheckCircle2, AlertCircle, Edit3, Save, X, Loader2, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTaskGenerationWithProgress, useTaskBreakdownParser } from '../../hooks/useApi';
 import { TaskBreakdown, PlanningPlatform } from '../../lib';
 import CelebrationModal from '../../components/CelebrationModal';
+import PageHeader, { PageTitle, pageMainClasses } from '../../components/PageHeader';
 import FileUpload from '../../components/FileUpload';
 import PlatformSelectorWithResources from '../../components/PlatformSelectorWithResources';
 import { logger } from '../../lib/utils/logger';
@@ -73,10 +74,18 @@ export default function TaskGenerator() {
   useEffect(() => {
     if (completed && result) {
       // Handle both 'output' and 'response' fields for backward compatibility
-      const responseData = result.output || result.response;
-      if (responseData) {
-        const parsed = parseTaskBreakdown(responseData);
-        setTaskBreakdown(parsed);
+      const responseData =
+        typeof result === 'object' && result !== null
+          ? (result as { output?: string; response?: string }).output ||
+            (result as { output?: string; response?: string }).response
+          : undefined;
+      if (responseData && typeof responseData === 'string') {
+        try {
+          const parsed = parseTaskBreakdown(responseData);
+          setTaskBreakdown(parsed);
+        } catch (e) {
+          logger.error('Failed to parse generated tasks', e);
+        }
       }
     }
   }, [completed, result, parseTaskBreakdown]);
@@ -153,28 +162,13 @@ export default function TaskGenerator() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <button
-            onClick={() => navigate('/')}
-            className={styles.backButton}
-          >
-            <ArrowLeft className={styles.backIcon} />
-            <span className={styles.backText}>Back</span>
-          </button>
-        </div>
-      </header>
+      <PageHeader backTo="/" />
 
-      <main className={styles.main}>
-        <div className="mb-8 sm:mb-12">
-          <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-            Task Generator
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-            Select a platform and generate actionable tasks
-          </p>
-        </div>
-
+      <main className={pageMainClasses}>
+        <PageTitle
+          title="Task Generator"
+          subtitle="Select a platform and generate actionable tasks"
+        />
         <div className="space-y-6">
           {/* Platform + repository selection */}
           <div className={styles.section.container}>

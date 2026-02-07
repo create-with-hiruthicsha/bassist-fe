@@ -308,25 +308,31 @@ class ApiClient {
               onProgress(event);
 
               if (event.type === 'complete') {
-                // Extract the final result from the complete event
+                // Extract the final result from the complete event.
+                // Backend may send two complete events: one with a plain success message,
+                // one with the actual JSON payload. Only use the payload as result; never
+                // overwrite a valid result with a plain string message.
                 try {
                   const parsedResult = JSON.parse(event.message);
-                  // If it's a valid JSON object, use it as the result
                   if (typeof parsedResult === 'object' && parsedResult !== null) {
-                    result = parsedResult;
-                  } else {
-                    // If it's just a string message, keep the current result
-                    // This handles cases where the backend sends a success message first
-                    if (!result) {
-                      result = event.message as T;
+                    // Prefer payloads that contain the actual data (response/output)
+                    const hasPayload =
+                      (parsedResult as { response?: string; output?: string }).response != null ||
+                      (parsedResult as { response?: string; output?: string }).output != null;
+                    if (hasPayload) {
+                      result = parsedResult as T;
+                    } else if (!result) {
+                      result = parsedResult as T;
                     }
+                  } else if (!result) {
+                    result = event.message as T;
                   }
                 } catch {
-                  // If parsing fails, use the message as the result
-                  result = event.message as T;
+                  // Plain text message (e.g. "Task breakdown generated successfully!") – only use if we have no result yet
+                  if (!result) {
+                    result = event.message as T;
+                  }
                 }
-                // Don't break here - continue to process all complete events
-                // The last one should contain the actual data
               }
             }
           } catch {
@@ -481,6 +487,54 @@ class ApiClient {
     }
 
     return this.handleResponse<any[]>(response);
+  }
+
+  // Product Intelligence (Research UI)
+  async getProductIntelligenceStatus(): Promise<{ running: boolean }> {
+    const headers = await this.getAuthHeaders();
+    const response = await fetch(`${this.baseUrl}/product-intelligence/app/status`, {
+      method: 'GET',
+      headers,
+    });
+    if (!response.ok) throw await ErrorHandler.handleFetchError(response);
+    return this.handleResponse<{ running: boolean }>(response);
+  }
+
+  async runProductIntelligence(_payload?: { projectId?: string }): Promise<{ message?: string }> {
+    const headers = await this.getAuthHeaders();
+    const response = await fetch(`${this.baseUrl}/product-intelligence/app/run`, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify(_payload ?? {}),
+    });
+    if (response.status === 409) {
+      const data = await response.json().catch(() => ({}));
+      throw ErrorHandler.createApiError(
+        (data as { error?: string })?.error ?? 'Research already running',
+        409,
+        'CONFLICT',
+      );
+    }
+    if (!response.ok) throw await ErrorHandler.handleFetchError(response);
+    return this.handleResponse<{ message?: string }>(response);
+  }
+
+  async getProductIntelligenceUnderstanding(projectId?: string): Promise<{
+    valueProposition?: string;
+    targetUsers?: string[];
+    capabilities?: { name: string; description: string }[];
+    differentiators?: string[];
+    gapsAndLimitations?: string[];
+    periodEnd?: string;
+    generatedAt?: string;
+  }> {
+    const headers = await this.getAuthHeaders();
+    const url = projectId
+      ? `${this.baseUrl}/product-intelligence/app/understanding?projectId=${encodeURIComponent(projectId)}`
+      : `${this.baseUrl}/product-intelligence/app/understanding`;
+    const response = await fetch(url, { method: 'GET', headers });
+    if (!response.ok) throw await ErrorHandler.handleFetchError(response);
+    return this.handleResponse(response);
   }
 
   // Bug Fixing

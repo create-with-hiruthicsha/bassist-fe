@@ -10,6 +10,7 @@ import Preferences from './screens/preferences/Preferences';
 import OnboardingPage from './screens/onboarding/OnboardingPage';
 import BugFix from './screens/bug-fix/BugFix';
 import AIActions from './screens/ai-actions/AIActions';
+import Research from './screens/research/Research';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { useAuth } from './hooks/useAuth';
 import React from 'react';
@@ -48,6 +49,7 @@ function AppRouter() {
             <Route path="/direct-create-tasks" element={<DirectCreateTasks />} />
             <Route path="/bug-fix" element={<BugFix />} />
             <Route path="/ai-actions" element={<AIActions />} />
+            <Route path="/research" element={<Research />} />
             <Route path="/preferences" element={<Preferences />} />
             <Route path="/oauth-result" element={<OAuthResult />} />
             <Route path="*" element={<Navigate to="/" />} />

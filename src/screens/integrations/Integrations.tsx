@@ -1,39 +1,18 @@
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import IntegrationManager from '../../components/IntegrationManager';
 import APIKeyManager from '../../components/APIKeyManager';
+import PageHeader, { PageTitle, pageMainClasses } from '../../components/PageHeader';
 import { styles } from './styles';
 
 export default function Integrations() {
-  const navigate = useNavigate();
-
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <div className={styles.headerInner}>
-            <div className={styles.headerLeft}>
-              <button
-                onClick={() => navigate('/')}
-                className={styles.backButton}
-              >
-                <ArrowLeft className={styles.backIcon} />
-                <span className={styles.backText}>Back</span>
-              </button>
-              <div>
-                <h1 className={styles.title}>
-                  Integrations
-                </h1>
-                <p className={styles.subtitle}>
-                  Connect external services to enhance your workflow
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <PageHeader backTo="/" />
 
-      <main className={styles.main}>
+      <main className={pageMainClasses}>
+        <PageTitle
+          title="Integrations"
+          subtitle="Connect external services to enhance your workflow"
+        />
         <IntegrationManager />
 
         <div className="mt-12">

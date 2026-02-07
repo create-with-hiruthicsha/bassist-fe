@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import SuccessScreen from '../create-tasks/components/SuccessScreen';
-import { ArrowLeft, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCreateTasksWithProgress } from '../../hooks/useApi';
 import { PlanningPlatform, PLATFORM_CONFIGS, PLATFORM_WITH_CODE_REPOSITORY, integrationService } from '../../lib';
+import PageHeader, { PageTitle, pageMainClasses } from '../../components/PageHeader';
 import GitHubRepositorySelector from '../../components/GitHubRepositorySelector';
 import JiraProjectSelector from '../../components/JiraProjectSelector';
 import FileUpload from '../../components/FileUpload';
@@ -98,30 +99,13 @@ export default function DirectCreateTasks() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/')}
-              className={styles.backButton}
-            >
-              <ArrowLeft className={styles.backIcon} />
-              <span className={styles.backText}>Back</span>
-            </button>
-          </div>
-        </div>
-      </header>
+      <PageHeader backTo="/" />
 
-      <main className={styles.main}>
-        <div className={styles.titleSection}>
-          <h1 className={styles.title}>
-            Create Tasks
-          </h1>
-          <p className={styles.subtitle}>
-            Select a platform and create actionable tasks
-          </p>
-        </div>
-
+      <main className={pageMainClasses}>
+        <PageTitle
+          title="Create Tasks"
+          subtitle="Select a platform and create actionable tasks"
+        />
         <div className={styles.card}>
           <div className={styles.section.marginBottom}>
             <h2 className={styles.section.title}>

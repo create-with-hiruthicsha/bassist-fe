@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCreateTasksWithProgress } from '../../hooks/useApi';
 import { useAuth } from '../../hooks/useAuth';
 import { TaskBreakdown, PlanningPlatform, PLATFORM_WITH_CODE_REPOSITORY } from '../../lib';
+import PageHeader, { PageTitle, pageMainClasses } from '../../components/PageHeader';
 import PlatformSelectorWithResources from '../../components/PlatformSelectorWithResources';
 import FileUpload from '../../components/FileUpload';
 import { logger } from '../../lib/utils/logger';
@@ -119,26 +120,13 @@ export default function CreateTasks() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <button
-            onClick={() => navigate('/tasks')}
-            className={styles.backButton}
-          >
-            <ArrowLeft className={styles.backIcon} />
-            <span className={styles.backText}>Back</span>
-          </button>
-        </div>
-      </header>
+      <PageHeader backTo="/tasks" />
 
-      <main className={styles.main}>
-        <div className={styles.titleSection}>
-          <h1 className={styles.title}>
-            Create Tasks
-          </h1>
-          <p className={styles.subtitle}>Select a platform and create actionable tasks</p>
-        </div>
-
+      <main className={pageMainClasses}>
+        <PageTitle
+          title="Create Tasks"
+          subtitle="Select a platform and create actionable tasks"
+        />
         <div className={styles.contentSpace}>
           {/* Platform + Resource Selection */}
           <div className={styles.section.container}>

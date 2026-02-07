@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, FileText, Download, Sparkles, AlertCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { FileText, Download, Sparkles, AlertCircle } from 'lucide-react';
+import PageHeader, { PageTitle, pageMainClasses } from '../../components/PageHeader';
 import ReactMarkdown from 'react-markdown';
 import { useDocumentGenerationWithProgress } from '../../hooks/useApi';
 import { GenOptionsFormat } from '../../lib';
@@ -13,7 +13,6 @@ import { logger } from '../../lib/utils/logger';
 import { styles } from './styles';
 
 export default function DocumentGenerator() {
-  const navigate = useNavigate();
   const {
     generateDocumentWithProgress,
     loading: isGenerating,
@@ -106,28 +105,13 @@ export default function DocumentGenerator() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <button
-            onClick={() => navigate('/')}
-            className={styles.backButton}
-          >
-            <ArrowLeft className={styles.backIcon} />
-            <span className={styles.backText}>Back</span>
-          </button>
-        </div>
-      </header>
+      <PageHeader backTo="/" />
 
-      <main className={styles.main}>
-        <div className={styles.titleSection}>
-          <h1 className={styles.title}>
-            Document Generator
-          </h1>
-          <p className={styles.subtitle}>
-            Generate comprehensive documentation from your project details
-          </p>
-        </div>
-
+      <main className={pageMainClasses}>
+        <PageTitle
+          title="Document Generator"
+          subtitle="Generate comprehensive documentation from your project details"
+        />
         <div className={styles.contentSpace}>
           {/* Repository Selection (Optional) */}
           <div className={styles.card}>

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useExecuteMCPQuery, useGetBranches } from '../../hooks/useApi';
 import { logger } from '../../lib/utils/logger';
 import { type PlanningPlatform } from '../../lib';
+import PageHeader, { PageTitle, pageMainClasses } from '../../components/PageHeader';
 import PlatformSelectorWithResources from '../../components/PlatformSelectorWithResources';
 import ReactMarkdown from 'react-markdown';
 import MermaidDiagram from '../../components/MermaidDiagram';
@@ -110,30 +111,13 @@ export default function AIActions() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/')}
-              className={styles.backButton}
-            >
-              <ArrowLeft className={styles.backIcon} />
-              <span className={styles.backText}>Back</span>
-            </button>
-          </div>
-        </div>
-      </header>
+      <PageHeader backTo="/" />
 
-      <main className={styles.main}>
-        <div className={styles.titleSection}>
-          <h1 className={styles.title}>
-            AI Actions
-          </h1>
-          <p className={styles.subtitle}>
-            Describe what you want to accomplish in natural language. AI will use available integrations to get it done.
-          </p>
-        </div>
-
+      <main className={pageMainClasses}>
+        <PageTitle
+          title="AI Actions"
+          subtitle="Describe what you want to accomplish in natural language. AI will use available integrations to get it done."
+        />
         <div className={styles.card}>
           {/* Platform & resource selection */}
           <div className={styles.platformSection}>

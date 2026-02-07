@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowLeft, Loader2, AlertCircle, CheckCircle2, ExternalLink } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAssignedIssues, useFixBug } from '../../hooks/useApi';
 import { useAuth } from '../../hooks/useAuth';
 import { useDebounce } from '../../hooks/useDebounce';
 import { integrationService } from '../../lib';
+import PageHeader, { PageTitle, pageMainClasses } from '../../components/PageHeader';
 import GitHubRepositorySelector from '../../components/GitHubRepositorySelector';
 import { useRepository } from '../../context/RepositoryContext';
 import { logger } from '../../lib/utils/logger';
@@ -167,28 +168,13 @@ export default function BugFix() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <button
-            onClick={() => navigate('/')}
-            className={styles.backButton}
-          >
-            <ArrowLeft className={styles.backIcon} />
-            <span className={styles.backText}>Back</span>
-          </button>
-        </div>
-      </header>
+      <PageHeader backTo="/" />
 
-      <main className={styles.main}>
-        <div className={styles.titleSection}>
-          <h1 className={styles.title}>
-            Bug Fixing AI
-          </h1>
-          <p className={styles.subtitle}>
-            View and fix issues assigned to you using AI
-          </p>
-        </div>
-
+      <main className={pageMainClasses}>
+        <PageTitle
+          title="Bug Fixing AI"
+          subtitle="View and fix issues assigned to you using AI"
+        />
         <div className={styles.contentSpace}>
           {/* Platform Selection */}
           <div className={styles.card}>

@@ -1,15 +1,14 @@
-import { ArrowLeft, Sun, Moon, Monitor, Palette, Settings, Copy, RefreshCw, Check } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Sun, Moon, Monitor, Palette, Settings, Copy, RefreshCw, Check } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../hooks/useAuth';
 import { useState, useEffect, useCallback } from 'react';
 import { organizationService } from '../../lib/services/organization-service';
 import IntegrationsModal from '../../components/IntegrationsModal';
 import ManageIntegrationsButton from '../../components/Integrations';
+import PageHeader, { PageTitle, pageMainClasses } from '../../components/PageHeader';
 import { styles } from './styles';
 
 export default function Preferences() {
-  const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const { currentOrganization } = useAuth();
 
@@ -65,25 +64,17 @@ export default function Preferences() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <div className={styles.headerInner}>
-            <button
-              onClick={() => navigate(-1)}
-              className={styles.backButton}
-            >
-              <ArrowLeft className={styles.backIcon} />
-              <span className={styles.backText}>Back</span>
-            </button>
-            <div className={styles.titleContainer}>
-              <Palette className={styles.titleIcon} />
-              <h1 className={styles.mainTitle}>Preferences</h1>
-            </div>
-          </div>
-        </div>
-      </header>
+      <PageHeader backTo={-1} />
 
-      <main className={styles.main}>
+      <main className={pageMainClasses}>
+        <PageTitle
+          title={
+            <span className="flex items-center gap-2">
+              <Palette className="w-6 h-6" />
+              Preferences
+            </span>
+          }
+        />
         <div className={styles.contentSpace}>
           {/* Theme Selection */}
           <div className={styles.card}>
