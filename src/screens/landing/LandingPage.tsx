@@ -1,6 +1,7 @@
-import { FileText, Sparkles, ListTodo, Plus, Bug, Zap, Search } from 'lucide-react';
+import { FileText, Sparkles, ListTodo, Plus, Bug, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ActionCard from './components/ActionCard';
+import ResearchArchitecture from './components/ResearchArchitecture';
 import ProfileDropdown from '../../components/ProfileDropdown';
 
 export default function LandingPage() {
@@ -97,18 +98,7 @@ export default function LandingPage() {
           </div>
 
           <div className="md:col-span-3">
-            <ActionCard
-              circleBgClass="bg-teal-100 dark:bg-teal-900/20"
-              Icon={Search}
-              iconClass="w-8 h-8 text-teal-700 dark:text-teal-400"
-              title="Product Research"
-              description="Run competitive and product research and get the report by email"
-              buttonLabel="Start Research"
-              buttonClass="bg-teal-700 hover:bg-teal-800 focus:ring-teal-700"
-              onClick={() => navigate('/research')}
-              horizontal={true}
-              runningMode='pre-alpha'
-            />
+            <ResearchArchitecture />
           </div>
         </div>
 
