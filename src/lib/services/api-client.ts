@@ -274,6 +274,7 @@ class ApiClient {
   }
 
   // Stream Response Handler
+  // Robust for deployed env: proxy chunking, different line endings, old backends sending multiple complete events
   private async handleStreamResponse<T>(
     response: Response,
     onProgress: (event: ProgressEvent) => void
@@ -281,48 +282,83 @@ class ApiClient {
     const reader = response.body!.getReader();
     const decoder = new TextDecoder();
     let result: T | null = null;
+    let buffer = '';
+
+    // Accept all stream complete-event payload shapes: task generation, create tasks, document, AI actions
+    const hasValidPayload = (obj: unknown): boolean => {
+      if (!obj || typeof obj !== 'object') return false;
+      const o = obj as Record<string, unknown>;
+      return (
+        typeof o.response === 'string' ||
+        typeof o.output === 'string' ||
+        (Array.isArray(o.epics) && o.summary != null) ||
+        (typeof o.status === 'string' && (typeof o.result === 'string' || typeof o.output === 'string')) ||
+        typeof o.result === 'string' // ExecuteMCPQueryResponse: { result, summary?, _orchestration? }
+      );
+    };
 
     try {
       while (true) {
         const { done, value } = await reader.read();
-        
-        if (done) {
-          break;
-        }
+        if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split(/\r?\n/);
+        buffer = lines.pop() ?? ''; // keep incomplete line in buffer
 
         for (const line of lines) {
-          if (line.trim() === '') continue;
+          const trimmed = line.trim();
+          if (trimmed === '') continue;
 
           try {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
-              
-              if (data === '[DONE]') {
-                break;
-              }
+            if (trimmed.startsWith('data: ')) {
+              const data = trimmed.slice(6);
+              if (data === '[DONE]') break;
 
               const event: ProgressEvent = JSON.parse(data);
               onProgress(event);
 
               if (event.type === 'complete') {
-                // Backend sends a single complete event with JSON payload only.
                 try {
                   const parsedResult = JSON.parse(event.message);
-                  if (typeof parsedResult === 'object' && parsedResult !== null) {
+                  if (typeof parsedResult === 'object' && parsedResult !== null && hasValidPayload(parsedResult)) {
                     result = parsedResult as T;
                   }
+                  // Never overwrite a valid result with a non-JSON or plain-text message (e.g. old deployed backend)
                 } catch {
-                  // Ignore non-JSON complete messages
+                  // Backend may send plain-text success (e.g. create-tasks-stream): treat as CreateTasksResponse
+                  if (typeof event.message === 'string' && event.message.trim().length > 0 && !result) {
+                    result = { status: 'success', result: event.message } as T;
+                  }
                 }
               }
             }
           } catch {
-            // Skip malformed events
             continue;
           }
+        }
+      }
+
+      // Process any remaining buffered line
+      if (buffer.trim().startsWith('data: ')) {
+        try {
+          const data = buffer.trim().slice(6);
+          const event: ProgressEvent = JSON.parse(data);
+          onProgress(event);
+          if (event.type === 'complete') {
+            try {
+              const parsedResult = JSON.parse(event.message);
+              if (typeof parsedResult === 'object' && parsedResult !== null && hasValidPayload(parsedResult)) {
+                result = parsedResult as T;
+              }
+            } catch {
+              if (typeof event.message === 'string' && event.message.trim().length > 0 && !result) {
+                result = { status: 'success', result: event.message } as T;
+              }
+            }
+          }
+        } catch {
+          // ignore
         }
       }
 
