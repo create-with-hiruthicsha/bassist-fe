@@ -692,6 +692,66 @@ class ApiClient {
     return this.get<{ logs: string }>(`background-tasks/${id}/logs`);
   }
 
+  /**
+   * Subscribe to task log stream (SSE). Call the returned function to close the stream.
+   * Only opens when called; close when log window is closed.
+   */
+  subscribeBackgroundTaskLogs(
+    id: string,
+    callbacks: {
+      onInitial?: (logs: string) => void;
+      onAppend?: (logs: string) => void;
+      onError?: (err: Error) => void;
+    }
+  ): () => void {
+    const abortController = new AbortController();
+    let buffer = '';
+
+    const run = async () => {
+      try {
+        const headers = await this.getAuthHeaders();
+        const response = await fetch(`${this.baseUrl}/background-tasks/${id}/logs/stream`, {
+          method: 'GET',
+          headers,
+          signal: abortController.signal,
+        });
+        if (!response.ok || !response.body) {
+          callbacks.onError?.(new Error(response.statusText || 'Stream failed'));
+          return;
+        }
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() ?? '';
+          let data = '';
+          for (const line of lines) {
+            if (line.startsWith('data: ')) data = line.slice(6);
+            else if (line === '' && data) {
+              try {
+                const payload = JSON.parse(data) as { type: string; logs: string };
+                if (payload.type === 'initial') callbacks.onInitial?.(payload.logs ?? '');
+                else if (payload.type === 'append') callbacks.onAppend?.(payload.logs ?? '');
+              } catch {
+                // ignore parse errors
+              }
+              data = '';
+            }
+          }
+        }
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          callbacks.onError?.(err instanceof Error ? err : new Error(String(err)));
+        }
+      }
+    };
+    run();
+    return () => abortController.abort();
+  }
+
   async stopBackgroundTask(id: string): Promise<{ message: string }> {
     const headers = await this.getAuthHeaders();
     const response = await fetch(`${this.baseUrl}/background-tasks/${id}`, {

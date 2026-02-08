@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
 	Activity,
 	X,
@@ -9,16 +9,20 @@ import {
 	ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useBackgroundTasks, useBackgroundTaskLogs, useStopBackgroundTask } from '../hooks/useApi';
+import { useBackgroundTasks, useStopBackgroundTask } from '../hooks/useApi';
+import { apiClient } from '../lib';
 import toast from 'react-hot-toast';
 
 export const BackgroundTaskMonitor: React.FC = () => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-	const [autoRefresh, setAutoRefresh] = useState(false);
+	const [streamLogContent, setStreamLogContent] = useState('');
+	const [streamConnecting, setStreamConnecting] = useState(false);
+	const [streamError, setStreamError] = useState<string | null>(null);
+	const logContainerRef = useRef<HTMLDivElement>(null);
+	const closeStreamRef = useRef<(() => void) | null>(null);
 
 	const { data: tasks, getTasks } = useBackgroundTasks();
-	const { data: logsData, getLogs, loading: loadingLogs } = useBackgroundTaskLogs();
 	const { stopTask } = useStopBackgroundTask();
 
 	const fetchTasks = useCallback(() => {
@@ -33,18 +37,44 @@ export const BackgroundTaskMonitor: React.FC = () => {
 		}
 	}, [isOpen, fetchTasks]);
 
+	// Stream opens when log window opens, closes when log window closes
 	useEffect(() => {
-		if (selectedTaskId && autoRefresh) {
-			const currentTask = tasks?.find(t => t.id === selectedTaskId);
-			if (currentTask && currentTask.status !== 'running') {
-				setAutoRefresh(false);
-				return;
-			}
-			getLogs(selectedTaskId);
-			const interval = setInterval(() => getLogs(selectedTaskId), 3000);
-			return () => clearInterval(interval);
+		if (!selectedTaskId) {
+			closeStreamRef.current?.();
+			closeStreamRef.current = null;
+			setStreamLogContent('');
+			setStreamError(null);
+			setStreamConnecting(false);
+			return;
 		}
-	}, [selectedTaskId, autoRefresh, getLogs, tasks]);
+		setStreamConnecting(true);
+		setStreamError(null);
+		const close = apiClient.subscribeBackgroundTaskLogs(selectedTaskId, {
+			onInitial(logs) {
+				setStreamLogContent(logs ?? '');
+				setStreamConnecting(false);
+			},
+			onAppend(logs) {
+				setStreamLogContent(prev => prev + (logs ?? ''));
+				setStreamConnecting(false);
+			},
+			onError(err) {
+				setStreamError(err.message);
+				setStreamConnecting(false);
+			},
+		});
+		closeStreamRef.current = close;
+		return () => {
+			close();
+			closeStreamRef.current = null;
+		};
+	}, [selectedTaskId]);
+
+	// Autoscroll to bottom when new content is appended
+	useEffect(() => {
+		const el = logContainerRef.current;
+		if (el) el.scrollTop = el.scrollHeight;
+	}, [streamLogContent]);
 
 	const handleStopTask = async (id: string) => {
 		try {
@@ -120,11 +150,7 @@ export const BackgroundTaskMonitor: React.FC = () => {
 									tasks?.map((task) => (
 										<div
 											key={task.id}
-											onClick={() => {
-												setSelectedTaskId(task.id);
-												getLogs(task.id);
-												setAutoRefresh(task.status === 'running');
-											}}
+											onClick={() => setSelectedTaskId(task.id)}
 											className="p-4 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all cursor-pointer group relative overflow-hidden"
 										>
 											<div className="flex justify-between items-start mb-2">
@@ -194,20 +220,6 @@ export const BackgroundTaskMonitor: React.FC = () => {
 									</div>
 								</div>
 								<div className="flex items-center gap-2">
-									<button
-										disabled={tasks?.find(t => t.id === selectedTaskId)?.status !== 'running'}
-										onClick={() => setAutoRefresh(!autoRefresh)}
-										className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${autoRefresh
-												? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
-												: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
-											} ${tasks?.find(t => t.id === selectedTaskId)?.status !== 'running'
-												? 'opacity-50 cursor-not-allowed grayscale'
-												: 'hover:scale-105 active:scale-95'
-											}`}
-									>
-										<Clock className={`w-4 h-4 ${autoRefresh ? 'animate-spin' : ''}`} />
-										Live Updates
-									</button>
 									{tasks?.find(t => t.id === selectedTaskId)?.status === 'running' && (
 										<button
 											onClick={() => handleStopTask(selectedTaskId)}
@@ -223,14 +235,22 @@ export const BackgroundTaskMonitor: React.FC = () => {
 							</div>
 
 							<div className="flex-1 overflow-hidden p-6 bg-gray-950">
-								<div className="h-full w-full bg-black/40 rounded-2xl border border-gray-800 overflow-y-auto font-mono text-sm p-4 text-green-400 selection:bg-green-500/30">
-									{loadingLogs ? (
-										<div className="flex items-center gap-2 text-gray-500">
-											<Clock className="w-4 h-4 animate-spin" /> Fetching latest logs...
+								<div
+									ref={logContainerRef}
+									className="h-full w-full bg-black/40 rounded-2xl border border-gray-800 overflow-y-auto font-mono text-sm p-4 text-green-400 selection:bg-green-500/30"
+								>
+									{streamError ? (
+										<div className="flex flex-col items-center justify-center h-full text-red-400 gap-3">
+											<AlertCircle className="w-8 h-8" />
+											<p>{streamError}</p>
 										</div>
-									) : logsData?.logs ? (
+									) : streamConnecting && !streamLogContent ? (
+										<div className="flex items-center gap-2 text-gray-500">
+											<Clock className="w-4 h-4 animate-spin" /> Connecting to log stream...
+										</div>
+									) : streamLogContent ? (
 										<pre className="whitespace-pre-wrap leading-relaxed">
-											{logsData.logs}
+											{streamLogContent}
 										</pre>
 									) : (
 										<div className="flex flex-col items-center justify-center h-full text-gray-600 gap-3">
